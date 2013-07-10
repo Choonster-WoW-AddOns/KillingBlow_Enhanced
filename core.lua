@@ -43,7 +43,7 @@ local SCALE_Y = 1.5 -- The Y scalar that the image should scale by
 local SCALE_DURATION = 0.75 -- The duration of the scaling animation in seconds
 
 -- The sound to play when you get a killing blow
-local SOUND_PATH = "Sound\\creature\\GeneralBjarngrim\\HL_Bjarngrim_Slay03.ogg"
+local SOUND_PATH = "Interface\\AddOns\\KillingBlowImage\\KillingBlow.mp3"
 
 -------------------
 -- END OF CONFIG --
