@@ -4,6 +4,10 @@ Killing Blow Image is a WoW AddOn that shows an image and plays a sound when you
 
 At the moment, the AddOn is only available from [GitHub](https://github.com/Choonster/KillingBlowImage/); but it will be available from Curse and WoW Interface at a later date.
 
+Installation
+============
+To install the AddOn from a downloaded and unzipped GitHub tarball, create a folder called **KillingBlowImage** in your **Interface\AddOns** folder and copy the downloaded files into it.
+
 Credits
 =======
 Thanks OligoFriends of [Curse](http://www.curse.com/users/OligoFriends)/[WoWI](http://www.wowinterface.com/forums/member.php?u=249441) for the original concept and the art/sound design.
