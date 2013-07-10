@@ -29,8 +29,8 @@ local TEXTURE_HEIGHT = 263
 
 -- Used in image:SetPoint(TEXTURE_POINT, UIParent, ANCHOR_POINT, OFFSET_X, OFFSET_Y)
 -- See http://www.wowpedia.org/API_Region_SetPoint for explanation.
-local TEXTURE_POINT = "BOTTOM" -- The point of the texture that should be anchored to the nameplate.
-local ANCHOR_POINT  = "TOP"	   -- The point of the nameplate the texture should be anchored to.
+local TEXTURE_POINT = "CENTER" -- The point of the texture that should be anchored to the screen.
+local ANCHOR_POINT  = "CENTER" -- The point of the screen the texture should be anchored to.
 local OFFSET_X = 0 			   -- The x/y offset of the texture relative to the anchor point.
 local OFFSET_Y = 5
 
