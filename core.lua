@@ -20,8 +20,8 @@ local TEXTURE_PATH = "Interface\\AddOns\\KillingBlowImage\\KillingBlow"
 -- Make sure that you have ownership rights of any image that you contribute.
 
 -- The height/width of the texture. Using a height:width ratio different to that of the texture file may result in distortion.
-local TEXTURE_WIDTH = 300
-local TEXTURE_HEIGHT = 263
+local TEXTURE_WIDTH = 256
+local TEXTURE_HEIGHT = 256
 
 -------
 -- These four variables control how the image is anchored to the screen.
