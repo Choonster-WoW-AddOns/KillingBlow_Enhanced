@@ -1,6 +1,6 @@
 ﻿-- IMPORTANT: If you make any changes to this file, make sure you back it up before installing a new version.
 -- This will allow you to restore your custom configuration with ease.
--- Also back up any custom textures you add.
+-- Also back up any custom textures or sounds you add.
 
 -------
 -- The first three variables control the appearance of the texture.
@@ -35,25 +35,38 @@ local OFFSET_X = 0 			   -- The x/y offset of the texture relative to the anchor
 local OFFSET_Y = 5
 
 -------
--- These three variables control the scaling animation that plays when the image is shown
+-- These four variables control the animation that plays when the image is shown
 -------
 
 local SCALE_X = 1.5 -- The X scalar that the image should scale by
 local SCALE_Y = 1.5 -- The Y scalar that the image should scale by
 local SCALE_DURATION = 0.75 -- The duration of the scaling animation in seconds
 
+local DELAY_DURATION = 0.75 -- The amount of time between the end of the scaling animation and the image hiding
+
+-------
+-- Other options
+-------
+
 -- The sound to play when you get a killing blow
 local SOUND_PATH = "Interface\\AddOns\\KillingBlowImage\\KillingBlow.mp3"
+
+-- If true, the AddOn will only activate in battlegrounds. If false, it will work everywhere.
+local BG_ONLY = true
+
+-- If true, the AddOn will print a message in your chat frame when you get a killing blow showing your current total.
+-- This is reset any time you go through a loading screen (e.g. when entering or leaving a battleground or instance)
+local DO_CHAT = true
 
 -------------------
 -- END OF CONFIG --
 -------------------
 -- Do not change anything below here!
 
-local PLAYER_GUID = UnitGUID("player")
-
+------
+-- Animations
+------
 local frame = CreateFrame("Frame", "KillingBlowImageFrame", UIParent)
-frame:SetSize(TEXTURE_WIDTH, TEXTURE_HEIGHT)
 frame:SetPoint(TEXTURE_POINT, UIParent, ANCHOR_POINT, OFFSET_X, OFFSET_Y)
 frame:SetFrameStrata("HIGH")
 frame:Hide()
@@ -64,18 +77,45 @@ texture:SetAllPoints()
 
 local group = texture:CreateAnimationGroup()
 
-local animation = group:CreateAnimation("Scale")
-animation:SetScale(SCALE_X, SCALE_Y)
-animation:SetDuration(SCALE_DURATION)
+group:SetScript("OnPlay", function(self)
+	frame:SetSize(TEXTURE_WIDTH, TEXTURE_HEIGHT) -- Set the frame to the configured size before scaling animation starts
+end)
+
+local scale = group:CreateAnimation("Scale")
+scale:SetScale(SCALE_X, SCALE_Y)
+scale:SetDuration(SCALE_DURATION)
+
+local delay = group:CreateAnimation("Animation")
+delay:SetDuration(DELAY_DURATION)
+
+delay:SetScript("OnStart", function(self)
+	frame:SetSize(TEXTURE_WIDTH * SCALE_X, TEXTURE_HEIGHT * SCALE_Y) -- Set the frame to the scaled size after the scaling animation ends
+end)
+
+group:SetScript("OnFinished", function(self)
+	frame:Hide()
+end)
 
 frame:SetScript("OnShow", function(self)
 	group:Play()
 	PlaySoundFile(SOUND_PATH)
 end)
 
-group:SetScript("OnFinished", function(self)
-	frame:Hide()
-end)
+
+------
+-- Events
+------
+local PLAYER_GUID = UnitGUID("player")
+local KillCount = 0
+
+local function KillingBlow()
+	frame:Show()
+	
+	if DO_CHAT then
+		KillCount = KillCount + 1
+		print(("KILLING BLOW! Current total: %d"):format(KillCount))
+	end
+end
 
 frame:RegisterEvent("PLAYER_LOGIN")
 frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -87,9 +127,22 @@ function frame:PLAYER_LOGIN()
 	PLAYER_GUID = UnitGUID("player")
 end
 
+function frame:PLAYER_ENTERING_WORLD()
+	local inInstance, instanceType = IsInInstance()
+	if BG_ONLY then
+		if instanceType == "pvp" then
+			self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+		else
+			self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+		end
+	end
+	
+	KillCount = 0
+end
+
 function frame:COMBAT_LOG_EVENT_UNFILTERED(timestamp, event, hideCaster, sourceGUID)
 	if event == "PARTY_KILL" and sourceGUID == PLAYER_GUID then
-		self:Show()
+		KillingBlow()
 	end
 end
 
