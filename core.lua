@@ -7,8 +7,8 @@
 -------
 
 -- The path of the texture file you want to use relative to the main WoW directory (without the texture's file extension).
--- The default texture is "Interface\\AddOns\\KillingBlowImage\\KillingBlow"
-local TEXTURE_PATH = "Interface\\AddOns\\KillingBlowImage\\KillingBlow"
+-- The default texture is "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow"
+local TEXTURE_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow"
 
 -- You can add your own texture by placing a TGA image in the WoW\Interface\AddOns\KillingBlowImage directory and changing the string after TEXTURE_PATH to match its name.
 -- See the "filename" argument on the following page for details on the required texture file format:
@@ -20,8 +20,8 @@ local TEXTURE_PATH = "Interface\\AddOns\\KillingBlowImage\\KillingBlow"
 -- Make sure that you have ownership rights of any image that you contribute.
 
 -- The height/width of the texture. Using a height:width ratio different to that of the texture file may result in distortion.
-local TEXTURE_WIDTH = 256
-local TEXTURE_HEIGHT = 256
+local TEXTURE_WIDTH = 200
+local TEXTURE_HEIGHT = 200
 
 -------
 -- These four variables control how the image is anchored to the screen.
@@ -49,7 +49,10 @@ local DELAY_DURATION = 0.75 -- The amount of time between the end of the scaling
 -------
 
 -- The sound to play when you get a killing blow
-local SOUND_PATH = "Interface\\AddOns\\KillingBlowImage\\KillingBlow.mp3"
+local SOUND_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow.mp3"
+
+-- The channel to play the sound through. This can be "Master", "SFX", "Music" or "Ambience"
+local SOUND_CHANNEL = "Master"
 
 -- If true, the AddOn will only activate in battlegrounds. If false, it will work everywhere.
 local BG_ONLY = true
@@ -88,7 +91,7 @@ scale:SetDuration(SCALE_DURATION)
 local delay = group:CreateAnimation("Animation")
 delay:SetDuration(DELAY_DURATION)
 
-delay:SetScript("OnStart", function(self)
+delay:SetScript("OnPlay", function(self)
 	frame:SetSize(TEXTURE_WIDTH * SCALE_X, TEXTURE_HEIGHT * SCALE_Y) -- Set the frame to the scaled size after the scaling animation ends
 end)
 
@@ -98,7 +101,7 @@ end)
 
 frame:SetScript("OnShow", function(self)
 	group:Play()
-	PlaySoundFile(SOUND_PATH)
+	PlaySoundFile(SOUND_PATH, SOUND_CHANNEL)
 end)
 
 
