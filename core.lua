@@ -108,7 +108,10 @@ end)
 ------
 -- Events
 ------
+local band = bit.band
+
 local PLAYER_GUID = UnitGUID("player")
+local InBattleground = false
 local KillCount = 0
 
 local function KillingBlow()
@@ -133,8 +136,9 @@ end
 
 function frame:PLAYER_ENTERING_WORLD()
 	local inInstance, instanceType = IsInInstance()
+	InBattleground = instanceType == "pvp"
 	if BG_ONLY then
-		if instanceType == "pvp" then
+		if InBattleground then
 			self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 		else
 			self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -144,9 +148,11 @@ function frame:PLAYER_ENTERING_WORLD()
 	KillCount = 0
 end
 
-function frame:COMBAT_LOG_EVENT_UNFILTERED(timestamp, event, hideCaster, sourceGUID)
+function frame:COMBAT_LOG_EVENT_UNFILTERED(timestamp, event, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags)
 	if event == "PARTY_KILL" and sourceGUID == PLAYER_GUID then
+		if InBattleground and band(destGUID:sub(5, 5), 0x7) ~= 0 then return end -- If we're in a Battleground and this isn't a player, ignore it
 		KillingBlow()
 	end
 end
+
 
