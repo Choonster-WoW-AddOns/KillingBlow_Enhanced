@@ -119,7 +119,7 @@ local function KillingBlow()
 	
 	if DO_CHAT then
 		KillCount = KillCount + 1
-		print(("|cffff0000Killing Blows Counter: %d|r"):format(KillCount))
+		print(("|cffCC0033Killing Blows Counter: %d|r"):format(KillCount))
 	end
 end
 
