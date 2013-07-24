@@ -6,6 +6,10 @@ You can configure the AddOn by editing the options at the top of core.lua in a t
 
 The KB total is reset whenever you go through a loading screen (e.g. when you enter/leave a battleground).
 
+Download
+========
+You can download the AddOn from [Curse](http://www.curse.com/addons/wow/killingblow_enhanced) and [WoW Interface](http://www.wowinterface.com/downloads/info22424-KillingBlow_Enhanced.html).
+
 Source Code
 =========
 You can view the AddOn's source code on [GitHub](https://github.com/Choonster/KillingBlow_Enhanced).
