@@ -1,4 +1,4 @@
-﻿-- IMPORTANT: If you make any changes to this file, make sure you back it up before installing a new version.
+-- IMPORTANT: If you make any changes to this file, make sure you back it up before installing a new version.
 -- This will allow you to restore your custom configuration with ease.
 -- Also back up any custom textures or sounds you add.
 
@@ -66,6 +66,9 @@ local DO_CHAT = true
 -------------------
 -- Do not change anything below here!
 
+-- List globals here for mikk's FindGlobals script
+-- GLOBALS: PlaySoundFile, UnitGUID, IsInInstance, GetTime
+
 ------
 -- Animations
 ------
@@ -109,10 +112,16 @@ end)
 -- Events
 ------
 local band = bit.band
+local print, tonumber = print, tonumber
+
+local FILTER_MINE = bit.bor(COMBATLOG_OBJECT_AFFILIATION_MINE, COMBATLOG_OBJECT_REACTION_FRIENDLY, COMBATLOG_OBJECT_CONTROL_PLAYER) -- Matches any "unit" under the player's control
+local GUID_TYPE_MASK = 0x7
+local GUID_TYPE_PLAYER = 0x0
 
 local PLAYER_GUID = UnitGUID("player")
 local InBattleground = false
 local KillCount = 0
+local RecentKills = setmetatable({}, { __mode = "kv" }) -- [GUID] = killTime (from GetTime())
 
 local function KillingBlow()
 	frame:Show()
@@ -148,11 +157,28 @@ function frame:PLAYER_ENTERING_WORLD()
 	KillCount = 0
 end
 
-function frame:COMBAT_LOG_EVENT_UNFILTERED(timestamp, event, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags)
-	if event == "PARTY_KILL" and sourceGUID == PLAYER_GUID then
-		if InBattleground and band(destGUID:sub(5, 5), 0x7) ~= 0 then return end -- If we're in a Battleground and this isn't a player, ignore it
+function frame:COMBAT_LOG_EVENT_UNFILTERED(timestamp, event, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...)
+	if 
+		(sourceGUID ~= PLAYER_GUID and band(sourceFlags, FILTER_MINE) ~= FILTER_MINE) or -- If the source unit isn't the player or something controlled by the player (the latter check was suggested by Caellian)
+		(InBattleground and band(tonumber(destGUID:sub(5, 5), 16), GUID_TYPE_MASK) ~= GUID_TYPE_PLAYER) -- Or we're in a Battleground and the destination unit isn't a player
+	then return end -- Return now
+	
+	local _, overkill
+	if event == "SWING_DAMAGE" then
+		_, overkill = ...
+	elseif event:find("_DAMAGE", 1, true) and not event:find("_DURABILITY_DAMAGE", 1, true) then
+		_, _, _, _, overkill = ...
+	end
+	
+	local now, previousKill = GetTime(), RecentKills[destGUID]
+	
+	-- Caellian has noted that PARTY_KILL doesn't always fire correctly and suggested checking the overkill argument
+	-- (which will be -1 for non-killing blows) to mitigate against this.
+	--
+	-- Because most kills will trigger PARTY_KILL and an overkill _DAMAGE, we need to keep a record of recent kill times
+	-- and only record kills of the same unit when they're at least 1 second apart.
+	if (event == "PARTY_KILL" or (overkill and overkill >= 0)) and (not previousKill or now - previousKill > 1.0) then
 		KillingBlow()
+		RecentKills[destGUID] = now
 	end
 end
-
-
