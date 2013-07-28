@@ -6,11 +6,14 @@
 -- The first three variables control the appearance of the texture.
 -------
 
--- The path of the texture file you want to use relative to the main WoW directory (without the texture's file extension).
--- The default texture is "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow"
-local TEXTURE_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow"
+-- The path of the texture file you want to use for characters of each faction relative to the main WoW directory (without the texture's file extension).
+-- The default texture is "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\KillingBlow_Alliance" for Alliance
+-- and "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\KillingBlow_Horde" for Horde
+local ALLIANCE_TEXTURE_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Alliance"
+local HORDE_TEXTURE_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Horde"
 
--- You can add your own texture by placing a TGA image in the WoW\Interface\AddOns\KillingBlowImage directory and changing the string after TEXTURE_PATH to match its name.
+-- You can add your own texture by placing a TGA image in the WoW\Interface\AddOns\KillingBlowImage directory and changing the string after
+-- ALLIANCE_TEXTURE_PATH or HORDE_TEXTURE_PATH to match its name.
 -- See the "filename" argument on the following page for details on the required texture file format:
 -- http://www.wowpedia.org/API_Texture_SetTexture
 --
@@ -72,13 +75,12 @@ local DO_CHAT = true
 ------
 -- Animations
 ------
-local frame = CreateFrame("Frame", "KillingBlowImageFrame", UIParent)
+local frame = CreateFrame("Frame", "KillingBlow_EnhancedFrame", UIParent)
 frame:SetPoint(TEXTURE_POINT, UIParent, ANCHOR_POINT, OFFSET_X, OFFSET_Y)
 frame:SetFrameStrata("HIGH")
 frame:Hide()
 
 local texture = frame:CreateTexture()
-texture:SetTexture(TEXTURE_PATH)
 texture:SetAllPoints()
 
 local group = texture:CreateAnimationGroup()
@@ -122,6 +124,7 @@ local PLAYER_GUID = UnitGUID("player")
 local InBattleground = false
 local KillCount = 0
 local RecentKills = setmetatable({}, { __mode = "kv" }) -- [GUID] = killTime (from GetTime())
+local FirstLoad = true
 
 local function KillingBlow()
 	frame:Show()
@@ -144,6 +147,11 @@ function frame:PLAYER_LOGIN()
 end
 
 function frame:PLAYER_ENTERING_WORLD()
+	if FirstLoad then
+		FirstLoad = false
+		texture:SetTexture(UnitFactionGroup("player") == "Alliance" and ALLIANCE_TEXTURE_PATH or HORDE_TEXTURE_PATH)
+	end
+	
 	local inInstance, instanceType = IsInInstance()
 	InBattleground = instanceType == "pvp"
 	if BG_ONLY then
