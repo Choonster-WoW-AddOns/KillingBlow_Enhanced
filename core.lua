@@ -166,8 +166,9 @@ function frame:PLAYER_ENTERING_WORLD()
 end
 
 function frame:COMBAT_LOG_EVENT_UNFILTERED(timestamp, event, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...)
-	if 
-		(sourceGUID ~= PLAYER_GUID and band(sourceFlags, FILTER_MINE) ~= FILTER_MINE) or -- If the source unit isn't the player or something controlled by the player (the latter check was suggested by Caellian)
+	if
+		not destGUID or destGUID == "" or -- If there isn't a valid destination GUID
+		(sourceGUID ~= PLAYER_GUID and band(sourceFlags, FILTER_MINE) ~= FILTER_MINE) or -- Or the source unit isn't the player or something controlled by the player (the latter check was suggested by Caellian)
 		(InBattleground and band(tonumber(destGUID:sub(5, 5), 16), GUID_TYPE_MASK) ~= GUID_TYPE_PLAYER) -- Or we're in a Battleground and the destination unit isn't a player
 	then return end -- Return now
 	
