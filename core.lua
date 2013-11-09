@@ -57,8 +57,8 @@ local SOUND_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow.mp3"
 -- The channel to play the sound through. This can be "Master", "SFX", "Music" or "Ambience"
 local SOUND_CHANNEL = "Master"
 
--- If true, the AddOn will only activate in battlegrounds. If false, it will work everywhere.
-local BG_ONLY = true
+-- If true, the AddOn will only activate in battlegrounds and arenas. If false, it will work everywhere.
+local PVP_ONLY = true
 
 -- If true, the AddOn will print a message in your chat frame when you get a killing blow showing your current total.
 -- This is reset any time you go through a loading screen (e.g. when entering or leaving a battleground or instance)
@@ -70,7 +70,7 @@ local DO_CHAT = true
 -- Do not change anything below here!
 
 -- List globals here for mikk's FindGlobals script
--- GLOBALS: PlaySoundFile, UnitGUID, IsInInstance, GetTime
+-- GLOBALS: PlaySoundFile, UnitGUID, IsInInstance, GetTime, UnitFactionGroup
 
 ------
 -- Animations
@@ -121,7 +121,7 @@ local GUID_TYPE_MASK = 0x7
 local GUID_TYPE_PLAYER = 0x0
 
 local PLAYER_GUID = UnitGUID("player")
-local InBattleground = false
+local InPVP = false
 local KillCount = 0
 local RecentKills = setmetatable({}, { __mode = "kv" }) -- [GUID] = killTime (from GetTime())
 local FirstLoad = true
@@ -153,9 +153,9 @@ function frame:PLAYER_ENTERING_WORLD()
 	end
 	
 	local inInstance, instanceType = IsInInstance()
-	InBattleground = instanceType == "pvp"
-	if BG_ONLY then
-		if InBattleground then
+	InPVP = instanceType == "pvp" or instanceType == "arena"
+	if PVP_ONLY then
+		if InPVP then
 			self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 		else
 			self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -169,7 +169,7 @@ function frame:COMBAT_LOG_EVENT_UNFILTERED(timestamp, event, hideCaster, sourceG
 	if
 		not destGUID or destGUID == "" or -- If there isn't a valid destination GUID
 		(sourceGUID ~= PLAYER_GUID and band(sourceFlags, FILTER_MINE) ~= FILTER_MINE) or -- Or the source unit isn't the player or something controlled by the player (the latter check was suggested by Caellian)
-		(InBattleground and band(tonumber(destGUID:sub(5, 5), 16), GUID_TYPE_MASK) ~= GUID_TYPE_PLAYER) -- Or we're in a Battleground and the destination unit isn't a player
+		(InPVP and band(tonumber(destGUID:sub(5, 5), 16), GUID_TYPE_MASK) ~= GUID_TYPE_PLAYER) -- Or we're in a Battleground and the destination unit isn't a player
 	then return end -- Return now
 	
 	local _, overkill
