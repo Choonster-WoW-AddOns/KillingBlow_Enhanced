@@ -183,11 +183,11 @@ function frame:COMBAT_LOG_EVENT_UNFILTERED(timestamp, event, hideCaster, sourceG
 	local now, previousKill = GetTime(), RecentKills[destGUID]
 	
 	-- Caellian has noted that PARTY_KILL doesn't always fire correctly and suggested checking the overkill argument
-	-- (which will be -1 for non-killing blows) to mitigate against this.
+	-- (which will be 0 [or maybe -1] for non-killing blows) to mitigate against this.
 	--
 	-- Because most kills will trigger PARTY_KILL and an overkill _DAMAGE, we need to keep a record of recent kill times
 	-- and only record kills of the same unit when they're at least 1 second apart.
-	if (event == "PARTY_KILL" or (overkill and overkill >= 0)) and (not previousKill or now - previousKill > 1.0) then
+	if (event == "PARTY_KILL" or (overkill and overkill > 0)) and (not previousKill or now - previousKill > 1.0) then
 		KillingBlow()
 		RecentKills[destGUID] = now
 	end
