@@ -114,26 +114,56 @@ end)
 ------
 -- Events
 ------
+local addon, ns = ...
+
 local band = bit.band
 local print, tonumber = print, tonumber
+
+-- "YYYY-MM-DDThh:mm:ssZ" (ISO 8601 Complete date plus hours, minutes and seconds [UTC])
+-- We use date strings instead of Unix times (seconds since epoch) because Lua offers no easy way to get the current Unix time in the UTC timezone (`time` only supports local time).
+local DATE_FORMAT = "!%Y-%m-%dT%H:%M:%SZ"
+
+local function GetTimestamp()
+	return date(DATE_FORMAT)
+end
 
 local FILTER_MINE = bit.bor(COMBATLOG_OBJECT_AFFILIATION_MINE, COMBATLOG_OBJECT_REACTION_FRIENDLY, COMBATLOG_OBJECT_CONTROL_PLAYER) -- Matches any "unit" under the player's control
 local GUID_TYPE_MASK = 0x7
 local GUID_TYPE_PLAYER = 0x0
 
 local PLAYER_GUID = UnitGUID("player")
+local PLAYER_NAME = GetUnitName("player", true)
+
+local PlayerDB, CurrentSession
+
 local InPVP = false
 local KillCount = 0
 local RecentKills = setmetatable({}, { __mode = "kv" }) -- [GUID] = killTime (from GetTime())
 local FirstLoad = true
 
-local function KillingBlow()
+local function KillingBlow(destGUID, destName, now)
 	frame:Show()
+	
+	RecentKills[destGUID] = now
+	
+	if CurrentSession then
+		CurrentSession[GetTimestamp()] = destName
+	end	
 	
 	if DO_CHAT then
 		KillCount = KillCount + 1
 		print(("|cffCC0033Killing Blows Counter: %d|r"):format(KillCount))
 	end
+end
+
+local function StartSession(sessionType)
+	CurrentSession = { SessionType = sessionType, StartTime = GetTimestamp() }
+	PlayerDB[#PlayerDB + 1] = CurrentSession	
+end
+
+local function EndSession()
+	CurrentSession.EndTime = GetTimestamp()
+	CurrentSession = nil
 end
 
 frame:RegisterEvent("PLAYER_LOGIN")
@@ -143,24 +173,43 @@ frame:SetScript("OnEvent", function(self, event, ...)
 	self[event](self, ...)
 end)
 
+function frame:ADDON_LOADED(name)
+	if name == addon then
+		KillingBlow_Enhanced_DB = KillingBlow_Enhanced_DB or {}
+	end
+end
+
 function frame:PLAYER_LOGIN()
 	PLAYER_GUID = UnitGUID("player")
+	PLAYER_NAME = GetUnitName("player", true)
 end
 
 function frame:PLAYER_ENTERING_WORLD()
 	if FirstLoad then
 		FirstLoad = false
 		texture:SetTexture(UnitFactionGroup("player") == "Alliance" and ALLIANCE_TEXTURE_PATH or HORDE_TEXTURE_PATH)
+		
+		KillingBlow_Enhanced_DB[PLAYER_NAME] = KillingBlow_Enhanced_DB[PLAYER_NAME] or {}
+		PlayerDB = KillingBlow_Enhanced_DB[PLAYER_NAME]
 	end
 	
 	local inInstance, instanceType = IsInInstance()
 	InPVP = instanceType == "pvp" or instanceType == "arena"
+	
 	if PVP_ONLY then
 		if InPVP then
 			self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 		else
 			self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 		end
+	end
+	
+	if CurrentSession then
+		EndSession()
+	end
+	
+	if InPVP then
+		StartSession(instanceType)
 	end
 	
 	KillCount = 0
@@ -188,7 +237,6 @@ function frame:COMBAT_LOG_EVENT_UNFILTERED(timestamp, event, hideCaster, sourceG
 	-- Because most kills will trigger PARTY_KILL and an overkill _DAMAGE, we need to keep a record of recent kill times
 	-- and only record kills of the same unit when they're at least 1 second apart.
 	if (event == "PARTY_KILL" or (overkill and overkill > 0)) and (not previousKill or now - previousKill > 1.0) then
-		KillingBlow()
-		RecentKills[destGUID] = now
+		KillingBlow(destGUID, destName, now)		
 	end
 end

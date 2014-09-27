@@ -3,5 +3,6 @@
 ## Author: Choonster
 ## Notes: Shows an image and plays a sound when you get a killing blow.
 ## Version: @project-version@
+## SavedVariables: KillingBlow_Enhanced_DB
 
 core.lua
