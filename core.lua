@@ -166,6 +166,7 @@ local function EndSession()
 	CurrentSession = nil
 end
 
+frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_LOGIN")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
