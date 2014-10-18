@@ -128,8 +128,6 @@ local function GetTimestamp()
 end
 
 local FILTER_MINE = bit.bor(COMBATLOG_OBJECT_AFFILIATION_MINE, COMBATLOG_OBJECT_REACTION_FRIENDLY, COMBATLOG_OBJECT_CONTROL_PLAYER) -- Matches any "unit" under the player's control
-local GUID_TYPE_MASK = 0x7
-local GUID_TYPE_PLAYER = 0x0
 
 local PLAYER_GUID = UnitGUID("player")
 local PLAYER_NAME = GetUnitName("player", true)
@@ -220,7 +218,7 @@ function frame:COMBAT_LOG_EVENT_UNFILTERED(timestamp, event, hideCaster, sourceG
 	if
 		not destGUID or destGUID == "" or -- If there isn't a valid destination GUID
 		(sourceGUID ~= PLAYER_GUID and band(sourceFlags, FILTER_MINE) ~= FILTER_MINE) or -- Or the source unit isn't the player or something controlled by the player (the latter check was suggested by Caellian)
-		(InPVP and band(tonumber(destGUID:sub(5, 5), 16), GUID_TYPE_MASK) ~= GUID_TYPE_PLAYER) -- Or we're in a Battleground/Arena and the destination unit isn't a player
+		(InPVP and not destGUID:find("^Player%-")) -- Or we're in a Battleground/Arena and the destination unit isn't a player
 	then return end -- Return now
 	
 	local _, overkill
