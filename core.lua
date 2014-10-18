@@ -53,7 +53,7 @@ local DELAY_DURATION = 0.75 -- The amount of time between the end of the scaling
 -------
 
 -- The sound to play when you get a killing blow
-local SOUND_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow.mp3"
+local SOUND_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow.ogg"
 
 -- The channel to play the sound through. This can be "Master", "SFX", "Music" or "Ambience"
 local SOUND_CHANNEL = "Master"
