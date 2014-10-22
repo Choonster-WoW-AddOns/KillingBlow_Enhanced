@@ -8,10 +8,11 @@
 
 -- The path of the texture file you want to use for characters of each faction relative to the main WoW directory (without the texture's file extension).
 -- The default texture is "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\KillingBlow_Alliance" for Alliance
--- and "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\KillingBlow_Horde" for Horde.
--- The AddOn also includes two other textures:
---	"Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\KillingBlow_HordeAlliance"
---	"Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\KillingBlow_HordeSword"
+-- and "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\KillingBlow_Horde" for Horde; both by OligoFriends.
+-- The AddOn also includes three other textures:
+--	"Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\KillingBlow_HordeAlliance" by OligoFriends
+--	"Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\KillingBlow_Skull" by OligoFriends
+--	"Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\KillingBlow_HordeSword" by whitefreli
 local ALLIANCE_TEXTURE_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Alliance"
 local HORDE_TEXTURE_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Horde"
 
