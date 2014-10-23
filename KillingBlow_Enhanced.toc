@@ -4,5 +4,14 @@
 ## Notes: Shows an image and plays a sound when you get a killing blow.
 ## Version: @project-version@
 ## SavedVariables: KillingBlow_Enhanced_DB
+## OptionalDependencies: Ace3
+
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\AceDB-3.0\AceDB-3.0.lua
+Libs\AceDBOptions-3.0\AceDBOptions-3.0.lua
+Libs\AceGUI-3.0\AceGUI-3.0.xml
+Libs\AceConfig-3.0\AceConfig-3.0.xml
+Libs\AceGUI-3.0-SharedMediaWidgets\widget.xml
 
 core.lua
