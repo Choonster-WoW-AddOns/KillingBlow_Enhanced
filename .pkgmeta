@@ -3,6 +3,9 @@ package-as: KillingBlow_Enhanced
 tools-used:
     - findglobals
 
+move-folders:
+    KillingBlow_Enhanced/KillingBlow_Enhanced_Options: KillingBlow_Enhanced_Options
+	
 externals:
     Libs/LibStub:
         url: svn://svn.wowace.com/wow/libstub/mainline/trunk
@@ -12,13 +15,14 @@ externals:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceConfig-3.00
     Libs/AceDB-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceDB-3.0
-    Libs/AceDBOptions-3.0:
-        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceDBOptions-3.0
-    Libs/AceGUI-3.0:
-        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceGUI-3.0
-    Libs/AceConfig-3.0:
-        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceConfig-3.0
-    Libs/AceLocale-3.0:
+    
+    KillingBlow_Enhanced_Options/Libs/AceLocale-3.0:
         url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceLocale-3.0
-    Libs/AceGUI-3.0-SharedMediaWidgets:
+    KillingBlow_Enhanced_Options/Libs/AceDBOptions-3.0:
+        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceDBOptions-3.0
+    KillingBlow_Enhanced_Options/Libs/AceGUI-3.0:
+        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceGUI-3.0
+    KillingBlow_Enhanced_Options/Libs/AceConfig-3.0:
+        url: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceConfig-3.0
+    KillingBlow_Enhanced_Options/Libs/AceGUI-3.0-SharedMediaWidgets:
         url: svn://svn.wowace.com/wow/ace-gui-3-0-shared-media-widgets/mainline/trunk/AceGUI-3.0-SharedMediaWidgets

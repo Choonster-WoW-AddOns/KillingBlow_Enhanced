@@ -1,0 +1,15 @@
+﻿## Title: KillingBlow_Enhanced: Options
+## Interface: 60000
+## Author: Choonster
+## Notes: Allows you to configure KBE.
+## Version: @project-version@
+## LoadOnDemand: 1
+## Dependencies: KillingBlow_Enhanced
+
+Libs\AceLocale-3.0\AceLocale-3.0.lua
+Libs\AceDBOptions-3.0\AceDBOptions-3.0.lua
+Libs\AceGUI-3.0\AceGUI-3.0.xml
+Libs\AceConfig-3.0\AceConfig-3.0.xml
+Libs\AceGUI-3.0-SharedMediaWidgets\widget.xml
+
+core.lua
