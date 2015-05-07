@@ -1,3 +1,9 @@
+## 1.11
+- New version to fix Git/CurseForge packager screw-up
+
+## 1.10
+- Add KillingBlow_Death texture by OligoFriends
+
 ## 1.09
 - Add KillingBlow_HordeSword texture by whitefreli
 
