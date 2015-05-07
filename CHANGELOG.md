@@ -1,3 +1,6 @@
+## 1.12
+- Add AddOn to AddOn Packager Proxy
+
 ## 1.11
 - New version to fix Git/CurseForge packager screw-up
 
