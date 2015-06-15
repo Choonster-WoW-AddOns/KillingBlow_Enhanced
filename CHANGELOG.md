@@ -1,3 +1,6 @@
+## 1.13
+- Add support for World PvP zones in PVP_ONLY mode
+
 ## 1.12
 - Add AddOn to AddOn Packager Proxy
 

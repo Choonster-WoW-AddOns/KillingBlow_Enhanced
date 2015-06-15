@@ -75,7 +75,7 @@ local DO_CHAT = true
 -- Do not change anything below here!
 
 -- List globals here for mikk's FindGlobals script
--- GLOBALS: PlaySoundFile, UnitGUID, IsInInstance, GetTime, UnitFactionGroup
+-- GLOBALS: date, PlaySoundFile, UnitGUID, IsInInstance, GetTime, GetUnitName, UnitFactionGroup, SetMapToCurrentZone, GetCurrentMapAreaID, KillingBlow_Enhanced_DB
 
 ------
 -- Animations
@@ -145,13 +145,13 @@ local FirstLoad = true
 
 local function KillingBlow(destGUID, destName, now)
 	frame:Show()
-	
+
 	RecentKills[destGUID] = now
-	
+
 	if CurrentSession then
 		CurrentSession[GetTimestamp()] = destName
-	end	
-	
+	end
+
 	if DO_CHAT then
 		KillCount = KillCount + 1
 		print(("|cffCC0033Killing Blows Counter: %d|r"):format(KillCount))
@@ -160,13 +160,37 @@ end
 
 local function StartSession(sessionType)
 	CurrentSession = { SessionType = sessionType, StartTime = GetTimestamp() }
-	PlayerDB[#PlayerDB + 1] = CurrentSession	
+	PlayerDB[#PlayerDB + 1] = CurrentSession
 end
 
 local function EndSession()
 	CurrentSession.EndTime = GetTimestamp()
 	CurrentSession = nil
 end
+
+local IsInPvPZone
+do
+	local WORLD_PVP_ZONES = {
+	-- [areaID] = true, -- Zone Name
+		[501] = true,  -- Wintergrasp
+		[708] = true,  -- Tol Barad
+		[978] = true,  -- Ashran
+		[1009] = true, -- Stormshield
+		[1011] = true, -- Warspear
+	}
+
+	function IsInPvPZone()
+		local inInstance, instanceType = IsInInstance()
+		if inInstance and (instanceType == "pvp" or instanceType == "arena") then -- Is the player is in a BG or arena?
+			return true
+		end
+
+		SetMapToCurrentZone()
+		local areaID = GetCurrentMapAreaID()
+		return WORLD_PVP_ZONES[areaID] or false -- Is the player in a World PvP zone?
+	end
+end
+
 
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_LOGIN")
@@ -191,14 +215,13 @@ function frame:PLAYER_ENTERING_WORLD()
 	if FirstLoad then
 		FirstLoad = false
 		texture:SetTexture(UnitFactionGroup("player") == "Alliance" and ALLIANCE_TEXTURE_PATH or HORDE_TEXTURE_PATH)
-		
+
 		KillingBlow_Enhanced_DB[PLAYER_NAME] = KillingBlow_Enhanced_DB[PLAYER_NAME] or {}
 		PlayerDB = KillingBlow_Enhanced_DB[PLAYER_NAME]
 	end
-	
-	local inInstance, instanceType = IsInInstance()
-	InPVP = instanceType == "pvp" or instanceType == "arena"
-	
+
+	InPVP = IsInPvPZone()
+
 	if PVP_ONLY then
 		if InPVP then
 			self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -206,15 +229,16 @@ function frame:PLAYER_ENTERING_WORLD()
 			self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 		end
 	end
-	
+
 	if CurrentSession then
 		EndSession()
 	end
-	
+
 	if InPVP then
-		StartSession(instanceType)
+		local inInstance, instanceType = IsInInstance()
+		StartSession(instanceType or "worldpvp")
 	end
-	
+
 	KillCount = 0
 end
 
@@ -224,22 +248,22 @@ function frame:COMBAT_LOG_EVENT_UNFILTERED(timestamp, event, hideCaster, sourceG
 		(sourceGUID ~= PLAYER_GUID and band(sourceFlags, FILTER_MINE) ~= FILTER_MINE) or -- Or the source unit isn't the player or something controlled by the player (the latter check was suggested by Caellian)
 		(InPVP and not destGUID:find("^Player%-")) -- Or we're in a Battleground/Arena and the destination unit isn't a player
 	then return end -- Return now
-	
+
 	local _, overkill
 	if event == "SWING_DAMAGE" then
 		_, overkill = ...
 	elseif event:find("_DAMAGE", 1, true) and not event:find("_DURABILITY_DAMAGE", 1, true) then
 		_, _, _, _, overkill = ...
 	end
-	
+
 	local now, previousKill = GetTime(), RecentKills[destGUID]
-	
+
 	-- Caellian has noted that PARTY_KILL doesn't always fire correctly and suggested checking the overkill argument
 	-- (which will be 0 [or maybe -1] for non-killing blows) to mitigate against this.
 	--
 	-- Because most kills will trigger PARTY_KILL and an overkill _DAMAGE, we need to keep a record of recent kill times
 	-- and only record kills of the same unit when they're at least 1 second apart.
 	if (event == "PARTY_KILL" or (overkill and overkill > 0)) and (not previousKill or now - previousKill > 1.0) then
-		KillingBlow(destGUID, destName, now)		
+		KillingBlow(destGUID, destName, now)
 	end
 end

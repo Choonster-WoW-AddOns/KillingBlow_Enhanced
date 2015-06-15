@@ -22,7 +22,13 @@ KillingBlow_Enhanced_DB = {
 			["2014-09-27T07:35:30Z"] = "Bobsmith-Aman'thul",
 			["2014-09-27T07:40:05Z"] = "Janecitizen-Frostmourne",
 			["2014-09-27T07:45:35Z"] = "Examplename-Barthilas",
-		}	
+		},
+		{
+			["SessionType"] = "worldpvp", -- World PvP session
+			["SessionStart"] = "2014-09-27T08:30:05Z",
+			["SessionEnd"] = "2014-09-27T09:00:15Z",
+			["2014-09-27T08:35:30Z"] = "Bobsmith-Aman'thul",
+		},
 	}
 }
 
@@ -44,7 +50,7 @@ end
 
 local function WriteSession(playerName, session)
 	local sessionType, sessionStart, sessionEnd = session.SessionType, session.SessionStart, session.SessionEnd
-	
+
 	for killTime, killedPlayer in pairs(session) do
 		if not killTime:find("Session", 1, true) then
 			OutputFile:write(playerName, ",", sessionType, ",", sessionStart, ",", sessionEnd, ",", killTime, ",", escapeCSV(killedPlayer), "\n")
