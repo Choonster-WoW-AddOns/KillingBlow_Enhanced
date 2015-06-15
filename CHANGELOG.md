@@ -1,3 +1,7 @@
+## 1.14
+- Avoid changing current map zone where possible. Map zone will still be changed when entering a new zone in Northrend as this is required to detect if the player is in Wintergrasp.
+- Update PvP zone status, start/end sessions and reset kill count when the player enters a new zone (ZONE_CHANGED_NEW_AREA) instead of when they enter a new instance/continent (PLAYER_ENTERING_WORLD)
+
 ## 1.13
 - Add support for World PvP zones in PVP_ONLY mode
 

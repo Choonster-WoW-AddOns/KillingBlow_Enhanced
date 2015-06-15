@@ -75,7 +75,7 @@ local DO_CHAT = true
 -- Do not change anything below here!
 
 -- List globals here for mikk's FindGlobals script
--- GLOBALS: date, PlaySoundFile, UnitGUID, IsInInstance, GetTime, GetUnitName, UnitFactionGroup, SetMapToCurrentZone, GetCurrentMapAreaID, KillingBlow_Enhanced_DB
+-- GLOBALS: date, PlaySoundFile, UnitGUID, IsInInstance, GetTime, GetUnitName, UnitFactionGroup, SetMapToCurrentZone, GetCurrentMapAreaID, GetInstanceInfo, KillingBlow_Enhanced_DB
 
 ------
 -- Animations
@@ -141,7 +141,6 @@ local PlayerDB, CurrentSession
 local InPVP = false
 local KillCount = 0
 local RecentKills = setmetatable({}, { __mode = "kv" }) -- [GUID] = killTime (from GetTime())
-local FirstLoad = true
 
 local function KillingBlow(destGUID, destName, now)
 	frame:Show()
@@ -170,14 +169,10 @@ end
 
 local IsInPvPZone
 do
-	local WORLD_PVP_ZONES = {
-	-- [areaID] = true, -- Zone Name
-		[501] = true,  -- Wintergrasp
-		[708] = true,  -- Tol Barad
-		[978] = true,  -- Ashran
-		[1009] = true, -- Stormshield
-		[1011] = true, -- Warspear
-	}
+	local INSTANCEMAPID_TOLBARAD = 732
+	local INSTANCEMAPID_ASHRAN = 1191
+	local INSTANCEMAPID_NORTHREND = 571
+	local AREAID_WINTERGRASP = 501
 
 	function IsInPvPZone()
 		local inInstance, instanceType = IsInInstance()
@@ -185,16 +180,22 @@ do
 			return true
 		end
 
-		SetMapToCurrentZone()
-		local areaID = GetCurrentMapAreaID()
-		return WORLD_PVP_ZONES[areaID] or false -- Is the player in a World PvP zone?
+		local _, _, _, _, _, _, _, instanceMapID = GetInstanceInfo()
+		if instanceMapID == INSTANCEMAPID_TOLBARAD or instanceMapID == INSTANCEMAPID_ASHRAN then -- Is the player in Tol Barad or Ashran?
+			return true
+		elseif instanceMapID == INSTANCEMAPID_NORTHREND then -- If the player is in Northrend,
+			SetMapToCurrentZone()
+			return GetCurrentMapAreaID() == AREAID_WINTERGRASP -- Is the player in Wintergrasp?
+		else
+			return false -- The player isn't in a PvP zone
+		end
 	end
 end
-
 
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_LOGIN")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 frame:SetScript("OnEvent", function(self, event, ...)
 	self[event](self, ...)
@@ -212,14 +213,15 @@ function frame:PLAYER_LOGIN()
 end
 
 function frame:PLAYER_ENTERING_WORLD()
-	if FirstLoad then
-		FirstLoad = false
-		texture:SetTexture(UnitFactionGroup("player") == "Alliance" and ALLIANCE_TEXTURE_PATH or HORDE_TEXTURE_PATH)
+	texture:SetTexture(UnitFactionGroup("player") == "Alliance" and ALLIANCE_TEXTURE_PATH or HORDE_TEXTURE_PATH)
 
-		KillingBlow_Enhanced_DB[PLAYER_NAME] = KillingBlow_Enhanced_DB[PLAYER_NAME] or {}
-		PlayerDB = KillingBlow_Enhanced_DB[PLAYER_NAME]
-	end
+	KillingBlow_Enhanced_DB[PLAYER_NAME] = KillingBlow_Enhanced_DB[PLAYER_NAME] or {}
+	PlayerDB = KillingBlow_Enhanced_DB[PLAYER_NAME]
 
+	self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+end
+
+function frame:ZONE_CHANGED_NEW_AREA()
 	InPVP = IsInPvPZone()
 
 	if PVP_ONLY then
@@ -246,7 +248,7 @@ function frame:COMBAT_LOG_EVENT_UNFILTERED(timestamp, event, hideCaster, sourceG
 	if
 		not destGUID or destGUID == "" or -- If there isn't a valid destination GUID
 		(sourceGUID ~= PLAYER_GUID and band(sourceFlags, FILTER_MINE) ~= FILTER_MINE) or -- Or the source unit isn't the player or something controlled by the player (the latter check was suggested by Caellian)
-		(InPVP and not destGUID:find("^Player%-")) -- Or we're in a Battleground/Arena and the destination unit isn't a player
+		(InPVP and not destGUID:find("^Player%-")) -- Or we're in a PvP zone and the destination unit isn't a player
 	then return end -- Return now
 
 	local _, overkill
