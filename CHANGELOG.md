@@ -1,3 +1,11 @@
+## 1.15
+- Rewrite PvP detection code with FFA PvP support
+-- Based on BankNorris' code [here](http://www.wowinterface.com/forums/showpost.php?p=309202&postcount=20)
+- Change World PvP sessionType to "world" in SavedVariables
+- Add "ffa" sessionType for Free for All PvP
+- Unregister ADDON_LOADED after it fires for this AddOn
+- Add CREDITS.md to keep track of people who helped with the AddOn
+
 ## 1.14
 - Avoid changing current map zone where possible. Map zone will still be changed when entering a new zone in Northrend as this is required to detect if the player is in Wintergrasp.
 - Update PvP zone status, start/end sessions and reset kill count when the player enters a new zone (ZONE_CHANGED_NEW_AREA) instead of when they enter a new instance/continent (PLAYER_ENTERING_WORLD)

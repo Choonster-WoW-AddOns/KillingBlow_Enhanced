@@ -75,7 +75,7 @@ local DO_CHAT = true
 -- Do not change anything below here!
 
 -- List globals here for mikk's FindGlobals script
--- GLOBALS: date, PlaySoundFile, UnitGUID, IsInInstance, GetTime, GetUnitName, UnitFactionGroup, SetMapToCurrentZone, GetCurrentMapAreaID, GetInstanceInfo, KillingBlow_Enhanced_DB
+-- GLOBALS: assert, type, date, PlaySoundFile, UnitGUID, IsInInstance, GetTime, GetUnitName, UnitFactionGroup, GetInstanceInfo, IsInActiveWorldPVP, UnitIsPVPFreeForAll, KillingBlow_Enhanced_DB
 
 ------
 -- Animations
@@ -136,9 +136,12 @@ local FILTER_MINE = bit.bor(COMBATLOG_OBJECT_AFFILIATION_MINE, COMBATLOG_OBJECT_
 local PLAYER_GUID = UnitGUID("player")
 local PLAYER_NAME = GetUnitName("player", true)
 
+local INSTANCEMAPID_ASHRAN = 1191
+local BATTLEID_ASHRAN = 24
+
 local PlayerDB, CurrentSession
 
-local InPVP = false
+local FirstLoad = true
 local KillCount = 0
 local RecentKills = setmetatable({}, { __mode = "kv" }) -- [GUID] = killTime (from GetTime())
 
@@ -167,36 +170,52 @@ local function EndSession()
 	CurrentSession = nil
 end
 
-local IsInPvPZone
+local IsInPVPZone, SetPVPStatus
 do
-	local INSTANCEMAPID_TOLBARAD = 732
-	local INSTANCEMAPID_ASHRAN = 1191
-	local INSTANCEMAPID_NORTHREND = 571
-	local AREAID_WINTERGRASP = 501
+	local InPVP = false
+	local PVPStatus = { instance = false, world = false, ffa = false }
 
-	function IsInPvPZone()
-		local inInstance, instanceType = IsInInstance()
-		if inInstance and (instanceType == "pvp" or instanceType == "arena") then -- Is the player is in a BG or arena?
-			return true
-		end
+	function IsInPVPZone()
+		return InPVP
+	end
 
-		local _, _, _, _, _, _, _, instanceMapID = GetInstanceInfo()
-		if instanceMapID == INSTANCEMAPID_TOLBARAD or instanceMapID == INSTANCEMAPID_ASHRAN then -- Is the player in Tol Barad or Ashran?
-			return true
-		elseif instanceMapID == INSTANCEMAPID_NORTHREND then -- If the player is in Northrend,
-			SetMapToCurrentZone()
-			return GetCurrentMapAreaID() == AREAID_WINTERGRASP -- Is the player in Wintergrasp?
-		else
-			return false -- The player isn't in a PvP zone
+	function SetPVPStatus(pvpType, status, sessionType)
+		assert(PVPStatus[pvpType] ~= nil, ("Invalid pvpType: %s"):format(pvpType))
+		assert(type(status) == "boolean", "status must be boolean")
+
+		PVPStatus[pvpType] = status
+
+		local oldPVPStatus = InPVP
+		InPVP = PVPStatus.instance or PVPStatus.world or PVPStatus.ffa
+		if oldPVPStatus ~= InPVP then
+			if CurrentSession then
+				EndSession()
+			end
+			
+			KillCount = 0
+
+			if InPVP then
+				StartSession(sessionType or pvpType)
+			end
 		end
 	end
 end
 
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_LOGIN")
-frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+
+-- Instance/World PvP
+frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+
+-- World PvP
+frame:RegisterEvent("BATTLEFIELD_MGR_ENTERED")
+frame:RegisterEvent("BATTLEFIELD_MGR_EJECTED")
+frame:RegisterEvent("BATTLEFIELD_MGR_STATE_CHANGE")
+
+-- FFA PvP
+frame:RegisterUnitEvent("UNIT_FACTION", "player")
+
 frame:SetScript("OnEvent", function(self, event, ...)
 	self[event](self, ...)
 end)
@@ -204,6 +223,7 @@ end)
 function frame:ADDON_LOADED(name)
 	if name == addon then
 		KillingBlow_Enhanced_DB = KillingBlow_Enhanced_DB or {}
+		self:UnregisterEvent("ADDON_LOADED")
 	end
 end
 
@@ -213,42 +233,48 @@ function frame:PLAYER_LOGIN()
 end
 
 function frame:PLAYER_ENTERING_WORLD()
-	texture:SetTexture(UnitFactionGroup("player") == "Alliance" and ALLIANCE_TEXTURE_PATH or HORDE_TEXTURE_PATH)
+	if FirstLoad then
+		FirstLoad = false
+		texture:SetTexture(UnitFactionGroup("player") == "Alliance" and ALLIANCE_TEXTURE_PATH or HORDE_TEXTURE_PATH)
 
-	KillingBlow_Enhanced_DB[PLAYER_NAME] = KillingBlow_Enhanced_DB[PLAYER_NAME] or {}
-	PlayerDB = KillingBlow_Enhanced_DB[PLAYER_NAME]
+		KillingBlow_Enhanced_DB[PLAYER_NAME] = KillingBlow_Enhanced_DB[PLAYER_NAME] or {}
+		PlayerDB = KillingBlow_Enhanced_DB[PLAYER_NAME]
+	end
 
-	self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+	local inInstance, instanceType = IsInInstance()
+	if inInstance and (instanceType == "pvp" or instanceType == "arena") then
+		SetPVPStatus("instance", true, instanceType)
+	else
+		SetPVPStatus("instance", false)
+
+		local _, _, _, _, _, _, _, instanceMapID = GetInstanceInfo()
+		SetPVPStatus("world", instanceMapID == INSTANCEMAPID_ASHRAN or IsInActiveWorldPVP())
+	end
 end
 
-function frame:ZONE_CHANGED_NEW_AREA()
-	InPVP = IsInPvPZone()
+function frame:BATTLEFIELD_MGR_ENTERED(battleID)
+	SetPVPStatus("world", true)
+end
 
-	if PVP_ONLY then
-		if InPVP then
-			self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-		else
-			self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-		end
+function frame:BATTLEFIELD_MGR_EJECTED(battleID, playerExited, relocated, battleActive, lowLevel, areaName)
+	SetPVPStatus("world", false)
+end
+
+function frame:BATTLEFIELD_MGR_STATE_CHANGE(battleID)
+	if battleID ~= BATTLEID_ASHRAN and not IsInActiveWorldPVP() then
+		SetPVPStatus("world", false)
 	end
+end
 
-	if CurrentSession then
-		EndSession()
-	end
-
-	if InPVP then
-		local inInstance, instanceType = IsInInstance()
-		StartSession(instanceType or "worldpvp")
-	end
-
-	KillCount = 0
+function frame:UNIT_FACTION(unit)
+	SetPVPStatus("ffa", UnitIsPVPFreeForAll("player"))
 end
 
 function frame:COMBAT_LOG_EVENT_UNFILTERED(timestamp, event, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...)
 	if
 		not destGUID or destGUID == "" or -- If there isn't a valid destination GUID
 		(sourceGUID ~= PLAYER_GUID and band(sourceFlags, FILTER_MINE) ~= FILTER_MINE) or -- Or the source unit isn't the player or something controlled by the player (the latter check was suggested by Caellian)
-		(InPVP and not destGUID:find("^Player%-")) -- Or we're in a PvP zone and the destination unit isn't a player
+		(IsInPVPZone() and not destGUID:find("^Player%-")) -- Or we're in a PvP zone and the destination unit isn't a player
 	then return end -- Return now
 
 	local _, overkill

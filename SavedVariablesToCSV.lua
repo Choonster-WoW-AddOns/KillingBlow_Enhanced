@@ -24,10 +24,16 @@ KillingBlow_Enhanced_DB = {
 			["2014-09-27T07:45:35Z"] = "Examplename-Barthilas",
 		},
 		{
-			["SessionType"] = "worldpvp", -- World PvP session
+			["SessionType"] = "world", -- World PvP session
 			["SessionStart"] = "2014-09-27T08:30:05Z",
 			["SessionEnd"] = "2014-09-27T09:00:15Z",
 			["2014-09-27T08:35:30Z"] = "Bobsmith-Aman'thul",
+		},
+		{
+			["SessionType"] = "ffa", -- FFA PvP session
+			["SessionStart"] = "2014-09-27T10:30:05Z",
+			["SessionEnd"] = "2014-09-27T11:00:15Z",
+			["2014-09-27T09:35:30Z"] = "Bobsmith-Aman'thul",
 		},
 	}
 }
