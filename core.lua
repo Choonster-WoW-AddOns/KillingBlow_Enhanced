@@ -197,6 +197,14 @@ do
 			if InPVP then
 				StartSession(sessionType or pvpType)
 			end
+			
+			if PVP_ONLY then
+				if InPVP then
+					frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+				else
+					frame:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+				end
+			end
 		end
 	end
 end
