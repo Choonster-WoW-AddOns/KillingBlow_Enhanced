@@ -172,7 +172,7 @@ end
 
 local IsInPVPZone, SetPVPStatus
 do
-	local InPVP = false
+	local InPVP = nil -- Initialise to nil so the the initial detection of a non-PvP zone and change to false unregisters COMBAT_LOG_EVENT_UNFILTERED
 	local PVPStatus = { instance = false, world = false, ffa = false }
 
 	function IsInPVPZone()
