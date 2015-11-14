@@ -1,3 +1,6 @@
+## 1.16
+- Bump TOC version
+
 ## 1.15
 - Rewrite PvP detection code with FFA PvP support
 -- Based on BankNorris' code [here](http://www.wowinterface.com/forums/showpost.php?p=309202&postcount=20)
