@@ -1,3 +1,6 @@
+## 1.17
+- Add KillingBlow_SkullShield by OligoFriends
+
 ## 1.16
 - Bump TOC version
 
