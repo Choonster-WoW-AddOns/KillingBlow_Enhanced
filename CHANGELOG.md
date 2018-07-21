@@ -1,10 +1,13 @@
+## 1.19.1
+- Fix nested bullet points in changelog
+
 ## 1.19
 - Update to 8.0
 - Move textures and sounds to their own subdirectories
 - Add KillingBlow_Alliance2 and KillingBlow_Horde2 textures by OligoFriends
 - Remove World PvP support
--- Blizzard has removed the events that the AddOn was using to detect World PvP and there's no clear documentation on their replacements
--- If there's significant demand or someone figures out how to handle World PvP in 8.0, support may be re-added
+	- Blizzard has removed the events that the AddOn was using to detect World PvP and there's no clear documentation on their replacements
+	- If there's significant demand or someone figures out how to handle World PvP in 8.0, support may be re-added
 
 ## 1.18
 - Bump TOC version
@@ -17,7 +20,7 @@
 
 ## 1.15
 - Rewrite PvP detection code with FFA PvP support
--- Based on BankNorris' code [here](http://www.wowinterface.com/forums/showpost.php?p=309202&postcount=20)
+	- Based on BankNorris' code [here](http://www.wowinterface.com/forums/showpost.php?p=309202&postcount=20)
 - Change World PvP sessionType to "world" in SavedVariables
 - Add "ffa" sessionType for Free for All PvP
 - Unregister ADDON_LOADED after it fires for this AddOn
