@@ -5,4 +5,7 @@
 ## Version: @project-version@
 ## SavedVariables: KillingBlow_Enhanced_DB
 
+## X-Curse-Project-ID: 62232
+## X-WoWI-ID: 22424
+
 core.lua
