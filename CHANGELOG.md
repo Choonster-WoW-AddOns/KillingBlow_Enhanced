@@ -1,3 +1,11 @@
+## 1.19
+- Update to 8.0
+- Move textures and sounds to their own subdirectories
+- Add KillingBlow_Alliance2 and KillingBlow_Horde2 textures by OligoFriends
+- Remove World PvP support
+-- Blizzard has removed the events that the AddOn was using to detect World PvP and there's no clear documentation on their replacements
+-- If there's significant demand or someone figures out how to handle World PvP in 8.0, support may be re-added
+
 ## 1.18
 - Bump TOC version
 

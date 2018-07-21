@@ -1,5 +1,5 @@
 ﻿## Title: KillingBlow_Enhanced
-## Interface: 70000
+## Interface: 80000
 ## Author: Choonster
 ## Notes: Shows an image and plays a sound when you get a killing blow.
 ## Version: @project-version@

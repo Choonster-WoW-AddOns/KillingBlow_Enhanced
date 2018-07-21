@@ -9,14 +9,16 @@
 -- The path of the texture file you want to use for characters of each faction relative to the main WoW directory (without the texture's file extension).
 -- The default texture is "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\KillingBlow_Alliance" for Alliance
 -- and "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\KillingBlow_Horde" for Horde; both by OligoFriends.
--- The AddOn also includes five other textures:
---	"Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\KillingBlow_HordeAlliance" by OligoFriends
---	"Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\KillingBlow_Skull" by OligoFriends
---	"Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\KillingBlow_HordeSword" by whitefreli
---	"Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\KillingBlow_Death" by OligoFriends
---	"Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\KillingBlow_SkullShield" by OligoFriends
-local ALLIANCE_TEXTURE_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Alliance"
-local HORDE_TEXTURE_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Horde"
+-- The AddOn also includes seven other textures:
+--	"Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\Textures\\KillingBlow_HordeAlliance" by OligoFriends
+--	"Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\Textures\\KillingBlow_Skull" by OligoFriends
+--	"Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\Textures\\KillingBlow_HordeSword" by whitefreli
+--	"Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\Textures\\KillingBlow_Death" by OligoFriends
+--	"Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\Textures\\KillingBlow_SkullShield" by OligoFriends
+--	"Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\Textures\\KillingBlow_Alliance2" by OligoFriends
+--	"Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\Textures\\KillingBlow_Horde2" by OligoFriends
+local ALLIANCE_TEXTURE_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\Textures\\KillingBlow_Alliance"
+local HORDE_TEXTURE_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\Textures\\KillingBlow_Horde"
 
 -- You can add your own texture by placing a TGA image in the WoW\Interface\AddOns\KillingBlowImage directory and changing the string after
 -- ALLIANCE_TEXTURE_PATH or HORDE_TEXTURE_PATH to match its name.
@@ -58,13 +60,13 @@ local DELAY_DURATION = 0.75 -- The amount of time between the end of the scaling
 -------
 
 -- The sound to play when you get a killing blow
-local SOUND_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow.ogg"
+local SOUND_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\Sounds\\KillingBlow.ogg"
 
 -- The channel to play the sound through. This can be "Master", "SFX", "Music" or "Ambience"
 local SOUND_CHANNEL = "Master"
 
 -- If true, the AddOn will only activate in battlegrounds and arenas. If false, it will work everywhere.
-local PVP_ONLY = true
+local PVP_ONLY = false
 
 -- If true, the AddOn will print a message in your chat frame when you get a killing blow showing your current total.
 -- This is reset any time you go through a loading screen (e.g. when entering or leaving a battleground or instance)
@@ -76,7 +78,7 @@ local DO_CHAT = true
 -- Do not change anything below here!
 
 -- List globals here for mikk's FindGlobals script
--- GLOBALS: assert, type, date, PlaySoundFile, UnitGUID, IsInInstance, GetTime, GetUnitName, UnitFactionGroup, GetInstanceInfo, IsInActiveWorldPVP, UnitIsPVPFreeForAll, KillingBlow_Enhanced_DB
+-- GLOBALS: assert, type, date, PlaySoundFile, UnitGUID, IsInInstance, GetTime, GetUnitName, UnitFactionGroup, UnitIsPVPFreeForAll, CombatLogGetCurrentEventInfo, KillingBlow_Enhanced_DB
 
 ------
 -- Animations
@@ -136,9 +138,6 @@ local FILTER_MINE = bit.bor(COMBATLOG_OBJECT_AFFILIATION_MINE, COMBATLOG_OBJECT_
 
 local PLAYER_GUID = UnitGUID("player")
 local PLAYER_NAME = GetUnitName("player", true)
-
-local INSTANCEMAPID_ASHRAN = 1191
-local BATTLEID_ASHRAN = 24
 
 local PlayerDB, CurrentSession
 
@@ -214,13 +213,8 @@ frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_LOGIN")
 frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 
--- Instance/World PvP
+-- Instance
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-
--- World PvP
-frame:RegisterEvent("BATTLEFIELD_MGR_ENTERED")
-frame:RegisterEvent("BATTLEFIELD_MGR_EJECTED")
-frame:RegisterEvent("BATTLEFIELD_MGR_STATE_CHANGE")
 
 -- FFA PvP
 frame:RegisterUnitEvent("UNIT_FACTION", "player")
@@ -255,23 +249,6 @@ function frame:PLAYER_ENTERING_WORLD()
 		SetPVPStatus("instance", true, instanceType)
 	else
 		SetPVPStatus("instance", false)
-
-		local _, _, _, _, _, _, _, instanceMapID = GetInstanceInfo()
-		SetPVPStatus("world", instanceMapID == INSTANCEMAPID_ASHRAN or IsInActiveWorldPVP())
-	end
-end
-
-function frame:BATTLEFIELD_MGR_ENTERED(battleID)
-	SetPVPStatus("world", true)
-end
-
-function frame:BATTLEFIELD_MGR_EJECTED(battleID, playerExited, relocated, battleActive, lowLevel, areaName)
-	SetPVPStatus("world", false)
-end
-
-function frame:BATTLEFIELD_MGR_STATE_CHANGE(battleID)
-	if battleID ~= BATTLEID_ASHRAN and not IsInActiveWorldPVP() then
-		SetPVPStatus("world", false)
 	end
 end
 
@@ -279,7 +256,7 @@ function frame:UNIT_FACTION(unit)
 	SetPVPStatus("ffa", UnitIsPVPFreeForAll("player"))
 end
 
-function frame:COMBAT_LOG_EVENT_UNFILTERED(timestamp, event, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...)
+local function HandleCLEU(timestamp, event, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...)
 	if
 		not destGUID or destGUID == "" or -- If there isn't a valid destination GUID
 		(sourceGUID ~= PLAYER_GUID and band(sourceFlags, FILTER_MINE) ~= FILTER_MINE) or -- Or the source unit isn't the player or something controlled by the player (the latter check was suggested by Caellian)
@@ -303,4 +280,8 @@ function frame:COMBAT_LOG_EVENT_UNFILTERED(timestamp, event, hideCaster, sourceG
 	if (event == "PARTY_KILL" or (overkill and overkill > 0)) and (not previousKill or now - previousKill > 1.0) then
 		KillingBlow(destGUID, destName, now)
 	end
+end
+
+function frame:COMBAT_LOG_EVENT_UNFILTERED()
+	HandleCLEU(CombatLogGetCurrentEventInfo())
 end
