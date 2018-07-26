@@ -66,7 +66,7 @@ local SOUND_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\Sounds\\KillingBlow
 local SOUND_CHANNEL = "Master"
 
 -- If true, the AddOn will only activate in battlegrounds and arenas. If false, it will work everywhere.
-local PVP_ONLY = false
+local PVP_ONLY = true
 
 -- If true, the AddOn will print a message in your chat frame when you get a killing blow showing your current total.
 -- This is reset any time you go through a loading screen (e.g. when entering or leaving a battleground or instance)

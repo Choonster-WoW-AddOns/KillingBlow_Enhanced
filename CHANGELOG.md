@@ -1,3 +1,7 @@
+## 1.20
+- Restore default value of `PVP_ONLY` setting to `true` (i.e. only record killing blows in PvP zones)
+	- I accidentally changed the default value to `false` in 1.19.
+
 ## 1.19.1
 - Fix nested bullet points in changelog
 
