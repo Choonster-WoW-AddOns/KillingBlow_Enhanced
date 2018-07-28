@@ -1,3 +1,9 @@
+## 1.21.1
+- Add missing changelog for 1.20
+
+## 1.21
+- Replace the `PVP_ONLY` setting with `PLAYER_KILLS_ONLY` (to only record killing blows on players) and `PVP_ZONES_ONLY` (to only record killing blows in PvP zones)
+
 ## 1.20
 - Restore default value of `PVP_ONLY` setting to `true` (i.e. only record killing blows in PvP zones)
 	- I accidentally changed the default value to `false` in 1.19.
