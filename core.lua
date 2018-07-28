@@ -65,8 +65,11 @@ local SOUND_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\Sounds\\KillingBlow
 -- The channel to play the sound through. This can be "Master", "SFX", "Music" or "Ambience"
 local SOUND_CHANNEL = "Master"
 
+-- If true, the AddOn will only record killing blows on players. If false, it will record all killing blows.
+local PLAYER_KILLS_ONLY = true
+
 -- If true, the AddOn will only activate in battlegrounds and arenas. If false, it will work everywhere.
-local PVP_ONLY = true
+local PVP_ZONES_ONLY = false
 
 -- If true, the AddOn will print a message in your chat frame when you get a killing blow showing your current total.
 -- This is reset any time you go through a loading screen (e.g. when entering or leaving a battleground or instance)
@@ -198,7 +201,7 @@ do
 				StartSession(sessionType or pvpType)
 			end
 			
-			if PVP_ONLY then
+			if PVP_ZONES_ONLY then
 				if InPVP then
 					frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 				else
@@ -260,7 +263,7 @@ local function HandleCLEU(timestamp, event, hideCaster, sourceGUID, sourceName, 
 	if
 		not destGUID or destGUID == "" or -- If there isn't a valid destination GUID
 		(sourceGUID ~= PLAYER_GUID and band(sourceFlags, FILTER_MINE) ~= FILTER_MINE) or -- Or the source unit isn't the player or something controlled by the player (the latter check was suggested by Caellian)
-		(IsInPVPZone() and not destGUID:find("^Player%-")) -- Or we're in a PvP zone and the destination unit isn't a player
+		(PLAYER_KILLS_ONLY and not destGUID:find("^Player%-")) -- Or we're only recording player kills and the destination unit isn't a player
 	then return end -- Return now
 
 	local _, overkill
