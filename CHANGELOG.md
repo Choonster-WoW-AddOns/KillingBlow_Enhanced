@@ -1,3 +1,7 @@
+## 1.22
+- Bump TOC version to 8.2.5 (Retail)/1.13.2 (Classic)
+- Enable packaging for Classic
+
 ## 1.21.1
 - Add missing changelog for 1.20
 
