@@ -1,9 +1,14 @@
-sudo: false
+os: linux
 language: c
- 
+
 addons:
   apt:
     packages:
-    - pandoc
- 
-script: curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash
+      - pandoc
+
+install:
+  - curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh > ./release.sh && chmod +x ./release.sh
+
+script:
+  - ./release.sh
+  - ./release.sh -g 1.13.2
