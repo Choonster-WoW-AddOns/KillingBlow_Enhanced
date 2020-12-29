@@ -11,4 +11,4 @@ install:
 
 script:
   - ./release.sh
-  - ./release.sh -g 1.13.2
+  - ./release.sh -g classic
