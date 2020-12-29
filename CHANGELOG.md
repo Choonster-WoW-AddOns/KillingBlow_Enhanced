@@ -1,3 +1,7 @@
+## 1.24
+- Fix Classic package using old game version
+- Try to fix Retail package upload
+
 ## 1.23
 - Bump TOC version to 9.0.2 (Retail)/1.13.6 (Classic)
 
