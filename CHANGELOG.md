@@ -1,3 +1,6 @@
+## 1.23
+- Bump TOC version to 9.0.2 (Retail)/1.13.6 (Classic)
+
 ## 1.22
 - Bump TOC version to 8.2.5 (Retail)/1.13.2 (Classic)
 - Enable packaging for Classic
