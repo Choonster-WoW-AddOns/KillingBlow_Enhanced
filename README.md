@@ -8,14 +8,14 @@ The KB total is reset whenever you go through a loading screen (e.g. when you en
 
 # Download
 
-You can download the AddOn from [Curse](http://www.curse.com/addons/wow/killingblow_enhanced) and [WoW Interface](http://www.wowinterface.com/downloads/info22424-KillingBlow_Enhanced.html).
+You can download the AddOn from [Curse](https://www.curseforge.com/wow/addons/killingblow_enhanced) and [WoW Interface](https://www.wowinterface.com/downloads/info22424-KillingBlow_Enhanced.html).
 
 # Source Code
 
-You can view the AddOn's source code on [GitHub](https://github.com/Choonster/KillingBlow_Enhanced).
+You can view the AddOn's source code on [GitHub](https://github.com/Choonster-WoW-AddOns/KillingBlow_Enhanced).
 
 # Credits
 
-Thanks OligoFriends of [Curse](http://www.curse.com/users/OligoFriends)/[WoWI](http://www.wowinterface.com/forums/member.php?u=249441) for the original concept and the art/sound design.
+Thanks [OligoFriends](https://www.wowinterface.com/forums/member.php?u=249441) for the original concept and the art/sound design.
 
-Thanks to [nightcracker](http://www.wowinterface.com/forums/member.php?u=207710) for [ncKillingBlow](http://www.wowinterface.com/downloads/info16011-ncKillingBlow.html), which showed me which event fires for killing blows.
+Thanks to [nightcracker](https://www.wowinterface.com/forums/member.php?u=207710) for [ncKillingBlow](https://www.wowinterface.com/downloads/info16011-ncKillingBlow.html), which showed me which event fires for killing blows.
