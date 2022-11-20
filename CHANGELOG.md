@@ -1,3 +1,7 @@
+## 1.25
+- Bump TOC version to 10.0.2 (Retail)/1.14.3 (Classic)
+- Add BCC/Wrath Classic TOC versions
+
 ## 1.24
 - Fix Classic package using old game version
 - Try to fix Retail package upload
