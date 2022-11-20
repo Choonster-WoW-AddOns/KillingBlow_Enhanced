@@ -42,8 +42,8 @@ local TEXTURE_HEIGHT = 200
 -- See http://www.wowpedia.org/API_Region_SetPoint for explanation.
 local TEXTURE_POINT = "CENTER" -- The point of the texture that should be anchored to the screen.
 local ANCHOR_POINT  = "CENTER" -- The point of the screen the texture should be anchored to.
-local OFFSET_X = 0 			   -- The x/y offset of the texture relative to the anchor point.
-local OFFSET_Y = 5
+local OFFSET_X      = 0 -- The x/y offset of the texture relative to the anchor point.
+local OFFSET_Y      = 5
 
 -------
 -- These four variables control the animation that plays when the image is shown
@@ -137,7 +137,11 @@ local function GetTimestamp()
 	return date(DATE_FORMAT)
 end
 
-local FILTER_MINE = bit.bor(COMBATLOG_OBJECT_AFFILIATION_MINE, COMBATLOG_OBJECT_REACTION_FRIENDLY, COMBATLOG_OBJECT_CONTROL_PLAYER) -- Matches any "unit" under the player's control
+local FILTER_MINE = bit.bor(-- Matches any "unit" under the player's control
+	COMBATLOG_OBJECT_AFFILIATION_MINE,
+	COMBATLOG_OBJECT_REACTION_FRIENDLY,
+	COMBATLOG_OBJECT_CONTROL_PLAYER
+)
 
 local PLAYER_GUID = UnitGUID("player")
 local PLAYER_NAME = GetUnitName("player", true)
@@ -194,13 +198,13 @@ do
 			if CurrentSession then
 				EndSession()
 			end
-			
+
 			KillCount = 0
 
 			if InPVP then
 				StartSession(sessionType or pvpType)
 			end
-			
+
 			if PVP_ZONES_ONLY then
 				if InPVP then
 					frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -259,11 +263,14 @@ function frame:UNIT_FACTION(unit)
 	SetPVPStatus("ffa", UnitIsPVPFreeForAll("player"))
 end
 
-local function HandleCLEU(timestamp, event, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, ...)
-	if
-		not destGUID or destGUID == "" or -- If there isn't a valid destination GUID
-		(sourceGUID ~= PLAYER_GUID and band(sourceFlags, FILTER_MINE) ~= FILTER_MINE) or -- Or the source unit isn't the player or something controlled by the player (the latter check was suggested by Caellian)
-		(PLAYER_KILLS_ONLY and not destGUID:find("^Player%-")) -- Or we're only recording player kills and the destination unit isn't a player
+local function HandleCLEU(timestamp, event, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID,
+                          destName, destFlags, destRaidFlags, ...)
+	-- If there isn't a valid destination GUID
+	if not destGUID or destGUID == "" or
+		-- Or the source unit isn't the player or something controlled by the player (the latter check was suggested by Caellian)
+		(sourceGUID ~= PLAYER_GUID and band(sourceFlags, FILTER_MINE) ~= FILTER_MINE) or
+		-- Or we're only recording player kills and the destination unit isn't a player
+		(PLAYER_KILLS_ONLY and not destGUID:find("^Player%-"))
 	then return end -- Return now
 
 	local _, overkill

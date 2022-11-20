@@ -47,7 +47,7 @@ local OutputFile = assert(io.open(CSVPath, "w"))
 
 -- Used to escape "'s
 -- http://lua-users.org/wiki/CsvUtils
-local function escapeCSV (s)
+local function escapeCSV(s)
 	if s:find('[,"]') then
 		s = '"' .. s:gsub('"', '""') .. '"'
 	end
@@ -59,7 +59,14 @@ local function WriteSession(playerName, session)
 
 	for killTime, killedPlayer in pairs(session) do
 		if not killTime:find("Session", 1, true) then
-			OutputFile:write(playerName, ",", sessionType, ",", sessionStart, ",", sessionEnd, ",", killTime, ",", escapeCSV(killedPlayer), "\n")
+			OutputFile:write(
+				playerName, ",",
+				sessionType, ",",
+				sessionStart, ",",
+				sessionEnd, ",",
+				killTime, ",",
+				escapeCSV(killedPlayer), "\n"
+			)
 		end
 	end
 end
