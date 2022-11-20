@@ -8,7 +8,7 @@ The KB total is reset whenever you go through a loading screen (e.g. when you en
 
 # Download
 
-You can download the AddOn from [Curse](https://www.curseforge.com/wow/addons/killingblow_enhanced) and [WoW Interface](https://www.wowinterface.com/downloads/info22424-KillingBlow_Enhanced.html).
+You can download the AddOn from [CurseForge](https://www.curseforge.com/wow/addons/killingblow_enhanced) and [WoW Interface](https://www.wowinterface.com/downloads/info22424-KillingBlow_Enhanced.html).
 
 # Source Code
 
