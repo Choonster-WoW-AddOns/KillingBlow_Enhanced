@@ -1,8 +1,8 @@
 ﻿## Title: KillingBlow_Enhanced
-## Interface: 100002
-## Interface-Classic: 11403
+## Interface: 100207
+## Interface-Classic: 11502
 ## Interface-BCC: 20504
-## Interface-Wrath: 30400
+## Interface-Wrath: 30403
 ## Author: Choonster
 ## Notes: Shows an image and plays a sound when you get a killing blow.
 ## Version: @project-version@
