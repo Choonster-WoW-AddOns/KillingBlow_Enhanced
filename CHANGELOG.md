@@ -1,3 +1,6 @@
+## 1.26
+- Bump TOC version to 10.2.7 (Retail)/1.15.2 (Classic)/3.4.3 (Wrath Classic)
+
 ## 1.25
 - Bump TOC version to 10.0.2 (Retail)/1.14.3 (Classic)
 - Add BCC/Wrath Classic TOC versions
