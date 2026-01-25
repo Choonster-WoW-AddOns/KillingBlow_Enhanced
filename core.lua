@@ -18,7 +18,7 @@
 --	"Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\Textures\\KillingBlow_Alliance2" by OligoFriends
 --	"Interface\\AddOns\\KillingBlow_Enhanced\\KillingBlow_Enhanced\\Textures\\KillingBlow_Horde2" by OligoFriends
 local ALLIANCE_TEXTURE_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\Textures\\KillingBlow_Alliance"
-local HORDE_TEXTURE_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\Textures\\KillingBlow_Horde"
+local HORDE_TEXTURE_PATH    = "Interface\\AddOns\\KillingBlow_Enhanced\\Textures\\KillingBlow_Horde"
 
 -- You can add your own texture by placing a TGA image in the WoW\Interface\AddOns\KillingBlowImage directory and changing the string after
 -- ALLIANCE_TEXTURE_PATH or HORDE_TEXTURE_PATH to match its name.
@@ -31,8 +31,8 @@ local HORDE_TEXTURE_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\Textures\\K
 -- Make sure that you have ownership rights of any image that you contribute.
 
 -- The height/width of the texture. Using a height:width ratio different to that of the texture file may result in distortion.
-local TEXTURE_WIDTH = 200
-local TEXTURE_HEIGHT = 200
+local TEXTURE_WIDTH         = 200
+local TEXTURE_HEIGHT        = 200
 
 -------
 -- These four variables control how the image is anchored to the screen.
@@ -40,40 +40,40 @@ local TEXTURE_HEIGHT = 200
 
 -- Used in image:SetPoint(TEXTURE_POINT, UIParent, ANCHOR_POINT, OFFSET_X, OFFSET_Y)
 -- See http://www.wowpedia.org/API_Region_SetPoint for explanation.
-local TEXTURE_POINT = "CENTER" -- The point of the texture that should be anchored to the screen.
-local ANCHOR_POINT  = "CENTER" -- The point of the screen the texture should be anchored to.
-local OFFSET_X      = 0 -- The x/y offset of the texture relative to the anchor point.
-local OFFSET_Y      = 5
+local TEXTURE_POINT         = "CENTER" -- The point of the texture that should be anchored to the screen.
+local ANCHOR_POINT          = "CENTER" -- The point of the screen the texture should be anchored to.
+local OFFSET_X              = 0        -- The x/y offset of the texture relative to the anchor point.
+local OFFSET_Y              = 5
 
 -------
 -- These four variables control the animation that plays when the image is shown
 -------
 
-local SCALE_X = 1.5 -- The X scalar that the image should scale by
-local SCALE_Y = 1.5 -- The Y scalar that the image should scale by
-local SCALE_DURATION = 0.75 -- The duration of the scaling animation in seconds
+local SCALE_X               = 1.5  -- The X scalar that the image should scale by
+local SCALE_Y               = 1.5  -- The Y scalar that the image should scale by
+local SCALE_DURATION        = 0.75 -- The duration of the scaling animation in seconds
 
-local DELAY_DURATION = 0.75 -- The amount of time between the end of the scaling animation and the image hiding
+local DELAY_DURATION        = 0.75 -- The amount of time between the end of the scaling animation and the image hiding
 
 -------
 -- Other options
 -------
 
 -- The sound to play when you get a killing blow
-local SOUND_PATH = "Interface\\AddOns\\KillingBlow_Enhanced\\Sounds\\KillingBlow.ogg"
+local SOUND_PATH            = "Interface\\AddOns\\KillingBlow_Enhanced\\Sounds\\KillingBlow.ogg"
 
 -- The channel to play the sound through. This can be "Master", "SFX", "Music" or "Ambience"
-local SOUND_CHANNEL = "Master"
+local SOUND_CHANNEL         = "Master"
 
 -- If true, the AddOn will only record killing blows on players. If false, it will record all killing blows.
-local PLAYER_KILLS_ONLY = true
+local PLAYER_KILLS_ONLY     = true
 
 -- If true, the AddOn will only activate in battlegrounds and arenas. If false, it will work everywhere.
-local PVP_ZONES_ONLY = false
+local PVP_ZONES_ONLY        = false
 
 -- If true, the AddOn will print a message in your chat frame when you get a killing blow showing your current total.
 -- This is reset any time you go through a loading screen (e.g. when entering or leaving a battleground or instance)
-local DO_CHAT = true
+local DO_CHAT               = true
 
 -------------------
 -- END OF CONFIG --
@@ -86,7 +86,7 @@ local DO_CHAT = true
 ------
 -- Animations
 ------
-local frame = CreateFrame("Frame", "KillingBlow_EnhancedFrame", UIParent)
+local frame                 = CreateFrame("Frame", "KillingBlow_EnhancedFrame", UIParent)
 frame:SetPoint(TEXTURE_POINT, UIParent, ANCHOR_POINT, OFFSET_X, OFFSET_Y)
 frame:SetFrameStrata("HIGH")
 frame:Hide()
@@ -129,6 +129,9 @@ local addon, ns = ...
 local band = bit.band
 local print, tonumber = print, tonumber
 
+-- true if we have the AddOn security restrictions added in 12.0.0
+local isCombatLogSecret = issecretvalue ~= nil
+
 -- "YYYY-MM-DDThh:mm:ssZ" (ISO 8601 Complete date plus hours, minutes and seconds [UTC])
 -- We use date strings instead of Unix times (seconds since epoch) because Lua offers no easy way to get the current Unix time in the UTC timezone (`time` only supports local time).
 local DATE_FORMAT = "!%Y-%m-%dT%H:%M:%SZ"
@@ -137,7 +140,7 @@ local function GetTimestamp()
 	return date(DATE_FORMAT)
 end
 
-local FILTER_MINE = bit.bor(-- Matches any "unit" under the player's control
+local FILTER_MINE = bit.bor( -- Matches any "unit" under the player's control
 	COMBATLOG_OBJECT_AFFILIATION_MINE,
 	COMBATLOG_OBJECT_REACTION_FRIENDLY,
 	COMBATLOG_OBJECT_CONTROL_PLAYER
@@ -155,7 +158,9 @@ local RecentKills = setmetatable({}, { __mode = "kv" }) -- [GUID] = killTime (fr
 local function KillingBlow(destGUID, destName, now)
 	frame:Show()
 
-	RecentKills[destGUID] = now
+	if not isCombatLogSecret then
+		RecentKills[destGUID] = now
+	end
 
 	if CurrentSession then
 		CurrentSession[GetTimestamp()] = destName
@@ -207,18 +212,34 @@ do
 
 			if PVP_ZONES_ONLY then
 				if InPVP then
-					frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+					frame:RegisterCombatLogEvent()
 				else
-					frame:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+					frame:UnregisterCombatLogEvent()
 				end
 			end
 		end
 	end
 end
 
+function frame:RegisterCombatLogEvent()
+	if isCombatLogSecret then
+		frame:RegisterEvent("PARTY_KILL")
+	else
+		frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+	end
+end
+
+function frame:UnregisterCombatLogEvent()
+	if isCombatLogSecret then
+		frame:UnregisterEvent("PARTY_KILL")
+	else
+		frame:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+	end
+end
+
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_LOGIN")
-frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+frame:RegisterCombatLogEvent()
 
 -- Instance
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -263,35 +284,60 @@ function frame:UNIT_FACTION(unit)
 	SetPVPStatus("ffa", UnitIsPVPFreeForAll("player"))
 end
 
-local function HandleCLEU(timestamp, event, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID,
-                          destName, destFlags, destRaidFlags, ...)
-	-- If there isn't a valid destination GUID
-	if not destGUID or destGUID == "" or
-		-- Or the source unit isn't the player or something controlled by the player (the latter check was suggested by Caellian)
-		(sourceGUID ~= PLAYER_GUID and band(sourceFlags, FILTER_MINE) ~= FILTER_MINE) or
-		-- Or we're only recording player kills and the destination unit isn't a player
-		(PLAYER_KILLS_ONLY and not destGUID:find("^Player%-"))
-	then return end -- Return now
+if isCombatLogSecret then
+	function frame:PARTY_KILL(attackerGUID, targetGUID)
+		-- If attacker is secret (not a player or pet) or not the player or their pet, return now
+		if issecretvalue(attackerGUID) or (attackerGUID ~= PLAYER_GUID and UnitTokenFromGUID(attackerGUID) ~= "pet")
+		then
+			return
+		end
 
-	local _, overkill
-	if event == "SWING_DAMAGE" then
-		_, overkill = ...
-	elseif event:find("_DAMAGE", 1, true) and not event:find("_DURABILITY_DAMAGE", 1, true) then
-		_, _, _, _, overkill = ...
+		-- If we're only recording player kills and the target isn't a player, return now
+		if PLAYER_KILLS_ONLY and (issecretvalue(targetGUID) or not targetGUID:find("^Player%-")) then
+			return
+		end
+
+		local now = GetTime()
+
+		-- May be secret
+		local targetName = UnitNameFromGUID(targetGUID)
+
+		KillingBlow(targetGUID, targetName, now)
+	end
+else
+	local function HandleCLEU(timestamp, event, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags,
+							  destGUID,
+							  destName, destFlags, destRaidFlags, ...)
+		-- If there isn't a valid destination GUID
+		if not destGUID or destGUID == "" or
+			-- Or the source unit isn't the player or something controlled by the player (the latter check was suggested by Caellian)
+			(sourceGUID ~= PLAYER_GUID and band(sourceFlags, FILTER_MINE) ~= FILTER_MINE) or
+			-- Or we're only recording player kills and the destination unit isn't a player
+			(PLAYER_KILLS_ONLY and not destGUID:find("^Player%-"))
+		then
+			return
+		end -- Return now
+
+		local _, overkill
+		if event == "SWING_DAMAGE" then
+			_, overkill = ...
+		elseif event:find("_DAMAGE", 1, true) and not event:find("_DURABILITY_DAMAGE", 1, true) then
+			_, _, _, _, overkill = ...
+		end
+
+		local now, previousKill = GetTime(), RecentKills[destGUID]
+
+		-- Caellian has noted that PARTY_KILL doesn't always fire correctly and suggested checking the overkill argument
+		-- (which will be 0 [or maybe -1] for non-killing blows) to mitigate against this.
+		--
+		-- Because most kills will trigger PARTY_KILL and an overkill _DAMAGE, we need to keep a record of recent kill times
+		-- and only record kills of the same unit when they're at least 1 second apart.
+		if (event == "PARTY_KILL" or (overkill and overkill > 0)) and (not previousKill or now - previousKill > 1.0) then
+			KillingBlow(destGUID, destName, now)
+		end
 	end
 
-	local now, previousKill = GetTime(), RecentKills[destGUID]
-
-	-- Caellian has noted that PARTY_KILL doesn't always fire correctly and suggested checking the overkill argument
-	-- (which will be 0 [or maybe -1] for non-killing blows) to mitigate against this.
-	--
-	-- Because most kills will trigger PARTY_KILL and an overkill _DAMAGE, we need to keep a record of recent kill times
-	-- and only record kills of the same unit when they're at least 1 second apart.
-	if (event == "PARTY_KILL" or (overkill and overkill > 0)) and (not previousKill or now - previousKill > 1.0) then
-		KillingBlow(destGUID, destName, now)
+	function frame:COMBAT_LOG_EVENT_UNFILTERED()
+		HandleCLEU(CombatLogGetCurrentEventInfo())
 	end
-end
-
-function frame:COMBAT_LOG_EVENT_UNFILTERED()
-	HandleCLEU(CombatLogGetCurrentEventInfo())
 end
