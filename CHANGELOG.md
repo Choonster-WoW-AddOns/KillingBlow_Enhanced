@@ -1,3 +1,7 @@
+## 1.27
+- Bump TOC Interface version for Retail, Classic, TBC Classic and add Cataclysm Classic and MoP Classic
+- Update to support 12.0.0 combat log changes
+
 ## 1.26
 - Bump TOC version to 10.2.7 (Retail)/1.15.2 (Classic)/3.4.3 (Wrath Classic)
 
