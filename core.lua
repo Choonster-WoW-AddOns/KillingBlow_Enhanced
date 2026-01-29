@@ -289,11 +289,25 @@ if isCombatLogSecret then
 		-- If attacker is secret (not a player or pet) or not the player or their pet, return now
 		if issecretvalue(attackerGUID) or (attackerGUID ~= PLAYER_GUID and UnitTokenFromGUID(attackerGUID) ~= "pet")
 		then
+			--@alpha@
+			print(
+				"KillingBlow_Enhanced - PARTY_KILL - attackerGUID is secret or not \"player\"/\"pet\"",
+				"secret:", issecretvalue(attackerGUID),
+				"value:", attackerGUID
+			)
+			--@end-alpha@
 			return
 		end
 
 		-- If we're only recording player kills and the target isn't a player, return now
 		if PLAYER_KILLS_ONLY and (issecretvalue(targetGUID) or not targetGUID:find("^Player%-")) then
+			--@alpha@
+			print(
+				"KillingBlow_Enhanced - PARTY_KILL - PLAYER_KILLS_ONLY is enabled and targetGUID is secret or not a player",
+				"secret:", issecretvalue(targetGUID),
+				"value:", targetGUID
+			)
+			--@end-alpha@
 			return
 		end
 
