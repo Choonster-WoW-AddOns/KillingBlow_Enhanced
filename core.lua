@@ -130,7 +130,8 @@ local band = bit.band
 local print, tonumber = print, tonumber
 
 -- true if we have the AddOn security restrictions added in 12.0.0
-local isCombatLogSecret = issecretvalue ~= nil
+-- TODO: Confirm if this works in the next Classic version to include the secrets API
+local isCombatLogSecret = C_Secrets and C_Secrets.HasSecretRestrictions and C_Secrets.HasSecretRestrictions()
 
 -- "YYYY-MM-DDThh:mm:ssZ" (ISO 8601 Complete date plus hours, minutes and seconds [UTC])
 -- We use date strings instead of Unix times (seconds since epoch) because Lua offers no easy way to get the current Unix time in the UTC timezone (`time` only supports local time).
@@ -182,13 +183,15 @@ local function EndSession()
 	CurrentSession = nil
 end
 
-local IsInPVPZone, SetPVPStatus
+local GetPVPStatus, SetPVPStatus
 do
 	local InPVP = nil -- Initialise to nil so the the initial detection of a non-PvP zone and change to false unregisters COMBAT_LOG_EVENT_UNFILTERED
 	local PVPStatus = { instance = false, world = false, ffa = false }
 
-	function IsInPVPZone()
-		return InPVP
+	function GetPVPStatus(pvpType)
+		assert(PVPStatus[pvpType] ~= nil, ("Invalid pvpType: %s"):format(pvpType))
+
+		return PVPStatus[pvpType]
 	end
 
 	function SetPVPStatus(pvpType, status, sessionType)
@@ -212,26 +215,28 @@ do
 
 			if PVP_ZONES_ONLY then
 				if InPVP then
-					frame:RegisterCombatLogEvent()
+					frame:RegisterCombatLogEvents()
 				else
-					frame:UnregisterCombatLogEvent()
+					frame:UnregisterCombatLogEvents()
 				end
 			end
 		end
 	end
 end
 
-function frame:RegisterCombatLogEvent()
+function frame:RegisterCombatLogEvents()
 	if isCombatLogSecret then
 		frame:RegisterEvent("PARTY_KILL")
+		frame:RegisterEvent("PLAYER_PVP_KILLS_CHANGED")
 	else
 		frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 	end
 end
 
-function frame:UnregisterCombatLogEvent()
+function frame:UnregisterCombatLogEvents()
 	if isCombatLogSecret then
 		frame:UnregisterEvent("PARTY_KILL")
+		frame:UnregisterEvent("PLAYER_PVP_KILLS_CHANGED")
 	else
 		frame:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 	end
@@ -239,7 +244,7 @@ end
 
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_LOGIN")
-frame:RegisterCombatLogEvent()
+frame:RegisterCombatLogEvents()
 
 -- Instance
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -286,7 +291,7 @@ end
 
 if isCombatLogSecret then
 	function frame:PARTY_KILL(attackerGUID, targetGUID)
-		-- If attacker is secret (not a player or pet) or not the player or their pet, return now
+		-- If attacker is secret or not the player or their pet, return now
 		if issecretvalue(attackerGUID) or (attackerGUID ~= PLAYER_GUID and UnitTokenFromGUID(attackerGUID) ~= "pet")
 		then
 			--@alpha@
@@ -299,8 +304,8 @@ if isCombatLogSecret then
 			return
 		end
 
-		-- If we're only recording player kills and the target isn't a player, return now
-		if PLAYER_KILLS_ONLY and (issecretvalue(targetGUID) or not targetGUID:find("^Player%-")) then
+		-- If we're in instanced PvP or only recording player kills and the target is secret or not a player, return now
+		if (GetPVPStatus("instance") or PLAYER_KILLS_ONLY) and (issecretvalue(targetGUID) or not targetGUID:find("^Player%-")) then
 			--@alpha@
 			print(
 				"KillingBlow_Enhanced - PARTY_KILL - PLAYER_KILLS_ONLY is enabled and targetGUID is secret or not a player",
@@ -315,6 +320,19 @@ if isCombatLogSecret then
 
 		-- May be secret
 		local targetName = UnitNameFromGUID(targetGUID)
+
+		KillingBlow(targetGUID, targetName, now)
+	end
+
+	function frame:PLAYER_PVP_KILLS_CHANGED(unitTarget)
+		-- If we're not in instanced PvP, the kill should be handled by PARTY_KILL
+		if not GetPVPStatus("instance") then
+			return
+		end
+
+		local now = GetTime()
+		local targetGUID = UnitGUID(unitTarget)
+		local targetName = UnitName(unitTarget)
 
 		KillingBlow(targetGUID, targetName, now)
 	end
