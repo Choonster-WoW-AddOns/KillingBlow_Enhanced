@@ -80,13 +80,21 @@ local DO_CHAT               = true
 -------------------
 -- Do not change anything below here!
 
--- List globals here for mikk's FindGlobals script
--- GLOBALS: assert, type, date, PlaySoundFile, UnitGUID, IsInInstance, GetTime, GetUnitName, UnitFactionGroup, UnitIsPVPFreeForAll, CombatLogGetCurrentEventInfo, KillingBlow_Enhanced_DB
+--@alpha@
+local DEBUG                 = true
+
+local function debugprint(...)
+	if DEBUG then
+		print("KillingBlow_Enhanced:", ...)
+	end
+end
+--@end-alpha@
+
 
 ------
 -- Animations
 ------
-local frame                 = CreateFrame("Frame", "KillingBlow_EnhancedFrame", UIParent)
+local frame = CreateFrame("Frame", "KillingBlow_EnhancedFrame", UIParent)
 frame:SetPoint(TEXTURE_POINT, UIParent, ANCHOR_POINT, OFFSET_X, OFFSET_Y)
 frame:SetFrameStrata("HIGH")
 frame:Hide()
@@ -127,7 +135,7 @@ end)
 local addon, ns = ...
 
 local band = bit.band
-local print, tonumber = print, tonumber
+local print = print
 
 -- true if we have the AddOn security restrictions added in 12.0.0
 -- TODO: Confirm if this works in the next Classic version to include the secrets API
@@ -150,11 +158,46 @@ local FILTER_MINE = bit.bor( -- Matches any "unit" under the player's control
 local PLAYER_GUID = UnitGUID("player")
 local PLAYER_NAME = GetUnitName("player", true)
 
+-- Thanks to ErnestasBaltinas' HK Sounds for this method of tracking killing blows
+local TOTAL_KILLING_BLOWS_ACHIEVEMENT_ID = 1487
+
 local PlayerDB, CurrentSession
 
 local FirstLoad = true
 local KillCount = 0
 local RecentKills = setmetatable({}, { __mode = "kv" }) -- [GUID] = killTime (from GetTime())
+local PreviousKillingBlows = 0
+local PreviousHonorableKills = 0
+
+local function GetKillingBlows()
+	local _, _, _, killingBlows = GetAchievementCriteriaInfoByID(TOTAL_KILLING_BLOWS_ACHIEVEMENT_ID, 0)
+	return killingBlows
+end
+
+local function GetHonorableKills()
+	local honorableKills = GetPVPLifetimeStats()
+	return honorableKills
+end
+
+local function CheckKillingBlowsIncreased()
+	local killingBlows = GetKillingBlows()
+	if killingBlows <= PreviousKillingBlows then
+		return false, killingBlows
+	end
+
+	PreviousKillingBlows = killingBlows
+	return true, killingBlows
+end
+
+local function CheckHonorableKillsIncreased()
+	local honorableKills = GetHonorableKills()
+	if honorableKills <= PreviousHonorableKills then
+		return false, honorableKills
+	end
+
+	PreviousHonorableKills = honorableKills
+	return true, honorableKills
+end
 
 local function KillingBlow(destGUID, destName, now)
 	frame:Show()
@@ -275,6 +318,17 @@ function frame:PLAYER_ENTERING_WORLD()
 
 		KillingBlow_Enhanced_DB[PLAYER_NAME] = KillingBlow_Enhanced_DB[PLAYER_NAME] or {}
 		PlayerDB = KillingBlow_Enhanced_DB[PLAYER_NAME]
+
+		PreviousKillingBlows = GetKillingBlows()
+		PreviousHonorableKills = GetHonorableKills()
+
+		--@alpha@
+		debugprint(
+			"PLAYER_ENTERING_WORLD",
+			"PreviousKillingBlows:", PreviousKillingBlows,
+			"PreviousHonorableKills:", PreviousHonorableKills
+		)
+		--@end-alpha@
 	end
 
 	local inInstance, instanceType = IsInInstance()
@@ -291,12 +345,28 @@ end
 
 if isCombatLogSecret then
 	function frame:PARTY_KILL(attackerGUID, targetGUID)
+		-- If the player's total killing blows hasn't increased, return now
+		local killingBlowsIncreased, killingBlows = CheckKillingBlowsIncreased()
+		if not killingBlowsIncreased then
+			--@alpha@
+			debugprint(
+				"PARTY_KILL - Total Killing Blows hasn't increased",
+				killingBlows
+			)
+			--@end-alpha@
+			return
+		end
+
+		--@alpha@
+		debugprint("PARTY_KILL - Total Killing Blows:", killingBlows)
+		--@end-alpha@
+
 		-- If attacker is secret or not the player or their pet, return now
-		if issecretvalue(attackerGUID) or (attackerGUID ~= PLAYER_GUID and UnitTokenFromGUID(attackerGUID) ~= "pet")
+		if not canaccessvalue(attackerGUID) or (attackerGUID ~= PLAYER_GUID and UnitTokenFromGUID(attackerGUID) ~= "pet")
 		then
 			--@alpha@
-			print(
-				"KillingBlow_Enhanced - PARTY_KILL - attackerGUID is secret or not \"player\"/\"pet\"",
+			debugprint(
+				"PARTY_KILL - attackerGUID is secret or not \"player\"/\"pet\"",
 				"secret:", issecretvalue(attackerGUID),
 				"value:", attackerGUID
 			)
@@ -305,12 +375,12 @@ if isCombatLogSecret then
 		end
 
 		-- If we're in instanced PvP or only recording player kills and the target is secret or not a player, return now
-		if (GetPVPStatus("instance") or PLAYER_KILLS_ONLY) and (issecretvalue(targetGUID) or not targetGUID:find("^Player%-")) then
+		if (GetPVPStatus("instance") or PLAYER_KILLS_ONLY) and (not canaccessvalue(targetGUID) or not targetGUID:find("^Player%-")) then
 			--@alpha@
-			print(
-				"KillingBlow_Enhanced - PARTY_KILL - PLAYER_KILLS_ONLY is enabled and targetGUID is secret or not a player",
-				"secret:", issecretvalue(targetGUID),
-				"value:", targetGUID
+			debugprint(
+				"PARTY_KILL - In instanced PvP or PLAYER_KILLS_ONLY is enabled AND targetGUID is secret or not a player",
+				"\ninPVP:", GetPVPStatus("instance"), "PLAYER_KILLS_ONLY:", PLAYER_KILLS_ONLY,
+				"\nsecret:", issecretvalue(targetGUID), "value:", targetGUID
 			)
 			--@end-alpha@
 			return
@@ -325,8 +395,26 @@ if isCombatLogSecret then
 	end
 
 	function frame:PLAYER_PVP_KILLS_CHANGED(unitTarget)
+		-- If the player's total honorable kills hasn't increased, return now
+		local honorableKillsIncreased, honorableKills = CheckHonorableKillsIncreased()
+		if not honorableKillsIncreased then
+			--@alpha@
+			debugprint(
+				"PLAYER_PVP_KILLS_CHANGED - Total Honorable Kills hasn't changed",
+				honorableKills
+			)
+			--@end-alpha@
+		end
+
+		--@alpha@
+		debugprint("PLAYER_PVP_KILLS_CHANGED - Total Honorable Kills:", honorableKills)
+		--@end-alpha@
+
 		-- If we're not in instanced PvP, the kill should be handled by PARTY_KILL
 		if not GetPVPStatus("instance") then
+			--@alpha
+			debugprint("PLAYER_PVP_KILLS_CHANGED", "Not in instanced PvP")
+			--@end-alpha@
 			return
 		end
 
