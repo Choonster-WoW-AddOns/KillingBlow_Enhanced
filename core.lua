@@ -167,16 +167,10 @@ local FirstLoad = true
 local KillCount = 0
 local RecentKills = setmetatable({}, { __mode = "kv" }) -- [GUID] = killTime (from GetTime())
 local PreviousKillingBlows = 0
-local PreviousHonorableKills = 0
 
 local function GetKillingBlows()
 	local _, _, _, killingBlows = GetAchievementCriteriaInfoByID(TOTAL_KILLING_BLOWS_ACHIEVEMENT_ID, 0)
 	return killingBlows
-end
-
-local function GetHonorableKills()
-	local honorableKills = GetPVPLifetimeStats()
-	return honorableKills
 end
 
 local function CheckKillingBlowsIncreased()
@@ -187,16 +181,6 @@ local function CheckKillingBlowsIncreased()
 
 	PreviousKillingBlows = killingBlows
 	return true, killingBlows
-end
-
-local function CheckHonorableKillsIncreased()
-	local honorableKills = GetHonorableKills()
-	if honorableKills <= PreviousHonorableKills then
-		return false, honorableKills
-	end
-
-	PreviousHonorableKills = honorableKills
-	return true, honorableKills
 end
 
 local function KillingBlow(destGUID, destName, now)
@@ -320,13 +304,11 @@ function frame:PLAYER_ENTERING_WORLD()
 		PlayerDB = KillingBlow_Enhanced_DB[PLAYER_NAME]
 
 		PreviousKillingBlows = GetKillingBlows()
-		PreviousHonorableKills = GetHonorableKills()
 
 		--@alpha@
 		debugprint(
 			"PLAYER_ENTERING_WORLD",
-			"PreviousKillingBlows:", PreviousKillingBlows,
-			"PreviousHonorableKills:", PreviousHonorableKills
+			"PreviousKillingBlows:", PreviousKillingBlows
 		)
 		--@end-alpha@
 	end
@@ -345,6 +327,16 @@ end
 
 if isCombatLogSecret then
 	function frame:PARTY_KILL(attackerGUID, targetGUID)
+		-- If we're in instanced PvP, the kill should be handled by PLAYER_PVP_KILLS_CHANGED
+		if GetPVPStatus("instance") then
+			--@alpha@
+			debugprint(
+				"PARTY_KILL - In instanced PvP"
+			)
+			--@end-alpha@
+			return
+		end
+
 		-- If the player's total killing blows hasn't increased, return now
 		local killingBlowsIncreased, killingBlows = CheckKillingBlowsIncreased()
 		if not killingBlowsIncreased then
@@ -374,12 +366,11 @@ if isCombatLogSecret then
 			return
 		end
 
-		-- If we're in instanced PvP or only recording player kills and the target is secret or not a player, return now
-		if (GetPVPStatus("instance") or PLAYER_KILLS_ONLY) and (not canaccessvalue(targetGUID) or not targetGUID:find("^Player%-")) then
+		-- If we're only recording player kills and the target is secret or not a player, return now
+		if PLAYER_KILLS_ONLY and (not canaccessvalue(targetGUID) or not targetGUID:find("^Player%-")) then
 			--@alpha@
 			debugprint(
-				"PARTY_KILL - In instanced PvP or PLAYER_KILLS_ONLY is enabled AND targetGUID is secret or not a player",
-				"\ninPVP:", GetPVPStatus("instance"), "PLAYER_KILLS_ONLY:", PLAYER_KILLS_ONLY,
+				"PARTY_KILL - PLAYER_KILLS_ONLY is enabled and targetGUID is secret or not a player",
 				"\nsecret:", issecretvalue(targetGUID), "value:", targetGUID
 			)
 			--@end-alpha@
@@ -395,28 +386,29 @@ if isCombatLogSecret then
 	end
 
 	function frame:PLAYER_PVP_KILLS_CHANGED(unitTarget)
-		-- If the player's total honorable kills hasn't increased, return now
-		local honorableKillsIncreased, honorableKills = CheckHonorableKillsIncreased()
-		if not honorableKillsIncreased then
-			--@alpha@
-			debugprint(
-				"PLAYER_PVP_KILLS_CHANGED - Total Honorable Kills hasn't changed",
-				honorableKills
-			)
-			--@end-alpha@
-		end
-
-		--@alpha@
-		debugprint("PLAYER_PVP_KILLS_CHANGED - Total Honorable Kills:", honorableKills)
-		--@end-alpha@
-
 		-- If we're not in instanced PvP, the kill should be handled by PARTY_KILL
 		if not GetPVPStatus("instance") then
 			--@alpha
-			debugprint("PLAYER_PVP_KILLS_CHANGED", "Not in instanced PvP")
+			debugprint("PLAYER_PVP_KILLS_CHANGED - Not in instanced PvP")
 			--@end-alpha@
 			return
 		end
+
+		-- If the player's total killing blows hasn't increased, return now
+		local killingBlowsIncreased, killingBlows = CheckKillingBlowsIncreased()
+		if not killingBlowsIncreased then
+			--@alpha@
+			debugprint(
+				"PLAYER_PVP_KILLS_CHANGED - Total Killing Blows hasn't increased",
+				killingBlows
+			)
+			--@end-alpha@
+			return
+		end
+
+		--@alpha@
+		debugprint("PLAYER_PVP_KILLS_CHANGED - Total Killing Blows:", killingBlows)
+		--@end-alpha@
 
 		local now = GetTime()
 		local targetGUID = UnitGUID(unitTarget)
