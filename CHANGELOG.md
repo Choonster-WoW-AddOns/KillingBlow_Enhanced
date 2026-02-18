@@ -1,3 +1,9 @@
+# 1.28
+- Use dedicated event to track player kills in instanced PvP
+- Check that total killing blows have increased before triggering a Killing Blow
+  - Thanks to Minstrelca, Baaksau, JaganGG and user_xr1i51vkwybbptqa for testing the alpha versions for me
+- Add debug logging for alpha versions
+
 ## 1.27
 - Bump TOC Interface version for Retail, Classic, TBC Classic and add Cataclysm Classic and MoP Classic
 - Update to support 12.0.0 combat log changes
