@@ -1,3 +1,6 @@
+# 1.29
+- Fix incorrect alpha comment
+
 # 1.28
 - Use dedicated event to track player kills in instanced PvP
 - Check that total killing blows have increased before triggering a Killing Blow
