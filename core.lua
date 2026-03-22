@@ -388,7 +388,7 @@ if isCombatLogSecret then
 	function frame:PLAYER_PVP_KILLS_CHANGED(unitTarget)
 		-- If we're not in instanced PvP, the kill should be handled by PARTY_KILL
 		if not GetPVPStatus("instance") then
-			--@alpha
+			--@alpha@
 			debugprint("PLAYER_PVP_KILLS_CHANGED - Not in instanced PvP")
 			--@end-alpha@
 			return
