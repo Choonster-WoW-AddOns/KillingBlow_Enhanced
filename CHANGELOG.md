@@ -1,3 +1,6 @@
+# 1.30
+- Bump TOC Interface version for Retail
+
 # 1.29
 - Fix incorrect alpha comment
 
